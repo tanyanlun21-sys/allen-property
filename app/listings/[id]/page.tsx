@@ -25,6 +25,24 @@ function clampPercent(v: any) {
   const n = safeNum(v);
   return Math.max(0, Math.min(100, n));
 }
+function availabilityLabel(availableFrom: any) {
+  if (!availableFrom) return "Ready move in";
+
+  const [y, m, d] = String(availableFrom).split("-").map(Number);
+  if (!y || !m || !d) return "Ready move in";
+
+  const from = new Date(y, m - 1, d, 0, 0, 0, 0);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+  if (from.getTime() <= today.getTime()) return "Ready move in";
+
+  const day = from.getDate();
+  const bucket = day <= 10 ? "early" : day <= 20 ? "mid" : "end";
+  const mon = from.toLocaleString(undefined, { month: "short" });
+
+  return `Available ${bucket} ${mon}`;
+}
 
 /** ✅ 租客模板：输出你 WhatsApp 的格式（按你图 1/2/3 的常用） */
 function buildTenantText(item: any) {
@@ -605,7 +623,7 @@ export default function ListingDetailPage() {
                     }
                   />
                 ) : (
-                  <div>{item.available_from ?? "—"}</div>
+                  <div>{availabilityLabel(item.available_from)}</div>
                 )}
               </div>
 
