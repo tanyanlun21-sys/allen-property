@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { PhotoCarousel } from "@/components/PhotoCarousel";
+import PhotoCarousel from "@/components/PhotoCarousel";
 import { rm } from "@/lib/money";
 
 type ListingType = "rent" | "sale";
