@@ -46,7 +46,7 @@ function availabilityLabel(availableFrom: any) {
 
   const day = from.getDate();
   const bucket = day <= 10 ? "early" : day <= 20 ? "mid" : "end";
-  const mon = from.toLocaleString(undefined, { month: "short" });
+  const mon = from.toLocaleString("en-US", { month: "short" });
 
   return `Available ${bucket} ${mon}`;
 }
