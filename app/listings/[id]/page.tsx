@@ -459,23 +459,6 @@ export default function ListingDetailPage() {
                 )}
               </div>
 
-<div className="col-span-2">
-  <div className="text-xs text-zinc-400 mb-1">Furnish</div>
-  {editingInfo ? (
-    <select
-      className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
-      value={infoDraft?.furnish ?? ""}
-      onChange={(e) => setInfoDraft((d: any) => ({ ...d, furnish: e.target.value || null }))}
-    >
-      <option value="">—</option>
-      <option value="Fully">Fully</option>
-      <option value="Partial">Partial</option>
-    </select>
-  ) : (
-    <div>{item.furnish ?? "—"}</div>
-  )}
-</div>
-
               <div>
                 <div className="text-xs text-zinc-400 mb-1">Status</div>
                 {editingInfo ? (
