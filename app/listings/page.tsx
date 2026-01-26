@@ -7,6 +7,7 @@ import { rm } from "@/lib/money";
 
 type ListingType = "rent" | "sale";
 type ListingStatus = "available" | "pending" | "booked" | "closed" | "inactive";
+type Furnish = "Fully" | "Partial" | null;
 
 type Listing = {
   id: string;
@@ -19,6 +20,7 @@ type Listing = {
   bathrooms: number | null;
   carparks: number | null;
   price: number | null;
+  furnish: Furnish; // ✅ 新增
   updated_at: string;
   _photoUrls?: string[];
 };
@@ -44,7 +46,10 @@ export default function ListingsPage() {
 
     const { data, error } = await supabase
       .from("listings")
-      .select("id,type,status,condo_name,area,sqft,bedrooms,bathrooms,carparks,price,updated_at")
+      // ✅ 加入 furnish
+      .select(
+        "id,type,status,condo_name,area,sqft,bedrooms,bathrooms,carparks,price,furnish,updated_at"
+      )
       .order("updated_at", { ascending: false });
 
     if (error || !data) {
@@ -165,7 +170,8 @@ export default function ListingsPage() {
           <div className="mt-6 text-sm text-zinc-400">Loading…</div>
         ) : filtered.length === 0 ? (
           <div className="mt-6 rounded-2xl bg-zinc-900 p-6 text-sm text-zinc-300">
-            No listings yet. Click <span className="font-semibold text-white">+ New</span> to create your first one.
+            No listings yet. Click{" "}
+            <span className="font-semibold text-white">+ New</span> to create your first one.
           </div>
         ) : (
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -175,13 +181,20 @@ export default function ListingsPage() {
                 href={`/listings/${x.id}`}
                 className="rounded-2xl bg-zinc-900 p-4 hover:bg-zinc-800 transition"
               >
-                {/* ✅ 照片：仍然可左右切（如果你有多张） */}
                 <PhotoCarousel urls={(x as any)._photoUrls ?? []} />
 
                 <div className="mt-3 text-lg font-semibold line-clamp-1">{x.condo_name}</div>
                 <div className="mt-1 text-sm text-zinc-400 line-clamp-1">{x.area ?? "—"}</div>
 
-                {/* ✅ 价钱：放在 sqft/rooms 上面 + 更大更粗 */}
+                {/* ✅ Furnish：有填才显示 */}
+                {x.furnish ? (
+                  <div className="mt-2">
+                    <span className="inline-flex rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-200">
+                      {x.furnish}
+                    </span>
+                  </div>
+                ) : null}
+
                 <div className="mt-3 text-base font-semibold text-white">
                   {x.price != null ? rm(x.price) : "—"}
                   <span className="ml-2 text-xs font-normal text-zinc-400">
@@ -189,17 +202,18 @@ export default function ListingsPage() {
                   </span>
                 </div>
 
-                {/* 原本的规格信息 */}
                 <div className="mt-1 text-sm text-zinc-300">
-                  {x.sqft ? `${x.sqft} sqft` : "—"} • {x.bedrooms ?? "—"}R • {x.bathrooms ?? "—"}B •{" "}
-                  {x.carparks ?? "—"}CP
+                  {x.sqft ? `${x.sqft} sqft` : "—"} • {x.bedrooms ?? "—"}R •{" "}
+                  {x.bathrooms ?? "—"}B • {x.carparks ?? "—"}CP
                 </div>
 
                 <div className="mt-3 flex items-center justify-between text-sm">
                   <span className="rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-200">
                     {x.type.toUpperCase()} • {x.status}
                   </span>
-                  <span className="text-xs text-zinc-400">{new Date(x.updated_at).toLocaleString()}</span>
+                  <span className="text-xs text-zinc-400">
+                    {new Date(x.updated_at).toLocaleString()}
+                  </span>
                 </div>
               </a>
             ))}
