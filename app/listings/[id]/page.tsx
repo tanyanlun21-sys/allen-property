@@ -26,6 +26,75 @@ function clampPercent(v: any) {
   return Math.max(0, Math.min(100, n));
 }
 
+/** ✅ 租客模板：输出你 WhatsApp 的格式（按你图 1/2/3 的常用） */
+function buildTenantText(item: any) {
+  const condo = (item?.condo_name ?? "").trim() || "—";
+  const sqft = item?.sqft ? `${item.sqft} sqft` : null;
+
+  const bed = item?.bedrooms != null && item.bedrooms !== "" ? `${item.bedrooms} bedroom` : null;
+  const bath =
+    item?.bathrooms != null && item.bathrooms !== "" ? `${item.bathrooms} bathroom` : null;
+
+  const cp =
+    item?.carparks != null && item.carparks !== ""
+      ? `${item.carparks} parking`
+      : item?.carparks === 0
+      ? `no parking`
+      : null;
+
+  // 你数据库里 furnish 是 "Fully" / "Partial"
+  const furnish =
+    item?.furnish === "Fully"
+      ? "Fully Furnished"
+      : item?.furnish === "Partial"
+      ? "Partial Furnished"
+      : null;
+
+  const price = item?.price != null && item.price !== "" ? rm(item.price) : null;
+
+  let available = item?.available_from ? String(item.available_from) : "";
+  // 你常用：Available now / early Feb
+  const availableLine = available ? `Available from ${available}` : "";
+
+  const lines: string[] = [];
+  lines.push(condo);
+  lines.push("");
+
+  if (sqft) lines.push(sqft);
+
+  // 1 Bedroom 1 Bathroom（你图 1/3）
+  if (bed || bath) {
+    const parts = [bed, bath].filter(Boolean);
+    if (parts.length) lines.push(parts.join(" "));
+  }
+
+  if (furnish) lines.push(furnish);
+  if (cp) lines.push(cp);
+  if (price) lines.push(price);
+
+  if (availableLine) {
+    lines.push("");
+    lines.push(availableLine);
+  }
+
+  return lines.join("\n");
+}
+
+async function copyText(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("Copied ✅");
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    alert("Copied ✅");
+  }
+}
+
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
 
@@ -71,6 +140,12 @@ export default function ListingDetailPage() {
   const localNet = useMemo(() => {
     return Math.max(0, localCommissionAmount - safeNum(deal.deductions));
   }, [localCommissionAmount, deal.deductions]);
+
+  // ✅ 租客模板文本（随 item 自动更新）
+  const tenantText = useMemo(() => {
+    if (!item) return "";
+    return buildTenantText(item);
+  }, [item]);
 
   const load = async () => {
     setLoading(true);
@@ -396,6 +471,43 @@ export default function ListingDetailPage() {
             <div className="text-xs text-zinc-400">
               Updated: {new Date(item.updated_at).toLocaleString()}
             </div>
+          </div>
+
+          {/* ✅ ✅ ✅ 租客模板区（你要放的就是这里） */}
+          <div className="mt-4 rounded-2xl bg-zinc-900 p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-base font-semibold text-white">Tenant template</div>
+                <div className="text-xs text-zinc-400 mt-1">
+                  一键复制 / 一键 WhatsApp（直接贴给租客）
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => copyText(tenantText)}
+                  className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black hover:opacity-90"
+                >
+                  📋 Copy
+                </button>
+
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(tenantText)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-black hover:opacity-90"
+                >
+                  WhatsApp
+                </a>
+              </div>
+            </div>
+
+            <textarea
+              readOnly
+              value={tenantText}
+              className="mt-4 w-full min-h-40 rounded-lg bg-zinc-800 px-3 py-2 text-sm text-zinc-200 outline-none"
+            />
           </div>
         </div>
 
