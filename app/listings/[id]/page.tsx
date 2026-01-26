@@ -367,6 +367,7 @@ export default function ListingDetailPage() {
       available_from: infoDraft.available_from || null,
 
       furnish: infoDraft?.furnish || null, // ✅ Furnish
+      owner_whatsapp: infoDraft?.owner_whatsapp?.trim() ? infoDraft.owner_whatsapp.trim() : null,
     };
 
     const { error } = await supabase.from("listings").update(payload).eq("id", id);
@@ -651,6 +652,22 @@ export default function ListingDetailPage() {
               </div>
             </div>
 
+{/* ✅ Owner WhatsApp（只在详情页显示，不影响 listing 卡片） */}
+<div>
+  <div className="text-xs text-zinc-400 mb-1">Owner WhatsApp</div>
+  {editingInfo ? (
+    <input
+      className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+      value={infoDraft?.owner_whatsapp ?? ""}
+      onChange={(e) =>
+        setInfoDraft((d: any) => ({ ...d, owner_whatsapp: e.target.value }))
+      }
+      placeholder="e.g. 60123456789 / 0123456789"
+    />
+  ) : (
+    <div>{item.owner_whatsapp ?? "—"}</div>
+  )}
+</div>
             <div>
               <div className="text-xs text-zinc-400 mb-1">Condo name</div>
               {editingInfo ? (
