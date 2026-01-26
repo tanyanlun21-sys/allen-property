@@ -25,6 +25,12 @@ function clampPercent(v: any) {
   const n = safeNum(v);
   return Math.max(0, Math.min(100, n));
 }
+
+/**
+ * ✅ Smart availability label
+ * - if no date OR date <= today => "Ready move in"
+ * - else => "Available early/mid/end Feb"
+ */
 function availabilityLabel(availableFrom: any) {
   if (!availableFrom) return "Ready move in";
 
@@ -32,6 +38,7 @@ function availabilityLabel(availableFrom: any) {
   if (!y || !m || !d) return "Ready move in";
 
   const from = new Date(y, m - 1, d, 0, 0, 0, 0);
+
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 
@@ -41,27 +48,6 @@ function availabilityLabel(availableFrom: any) {
   const bucket = day <= 10 ? "early" : day <= 20 ? "mid" : "end";
   const mon = from.toLocaleString(undefined, { month: "short" });
 
-  return `Available ${bucket} ${mon}`;
-}
-function availabilityText(availableFrom: string | null | undefined) {
-  if (!availableFrom) return "Ready move in";
-
-  // 用“日期”比较，避免时区造成今天/明天错位
-  const today = new Date();
-  const t = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-
-  const d0 = new Date(availableFrom);
-  const d = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate()).getTime();
-
-  if (!Number.isFinite(d)) return "Ready move in";
-
-  // 日期已到/已过
-  if (d <= t) return "Ready move in";
-
-  // 还没到：early / mid / end + 月份
-  const day = d0.getDate();
-  const bucket = day <= 10 ? "early" : day <= 20 ? "mid" : "end";
-  const mon = d0.toLocaleString("en-US", { month: "short" }); // Feb
   return `Available ${bucket} ${mon}`;
 }
 
@@ -91,9 +77,9 @@ function buildTenantText(item: any) {
 
   const price = item?.price != null && item.price !== "" ? rm(item.price) : null;
 
-  let available = item?.available_from ? String(item.available_from) : "";
-  // 你常用：Available now / early Feb
-  const availableLine = available ? `Available from ${available}` : "";
+  // ✅ 关键：不要再输出 Available from 2026-xx-xx
+  // 统一用 smart label：Ready move in / Available early Feb ...
+  const availText = availabilityLabel(item?.available_from);
 
   const lines: string[] = [];
   lines.push(condo);
@@ -111,9 +97,9 @@ function buildTenantText(item: any) {
   if (cp) lines.push(cp);
   if (price) lines.push(price);
 
-  if (availableLine) {
+  if (availText) {
     lines.push("");
-    lines.push(availableLine);
+    lines.push(availText);
   }
 
   return lines.join("\n");
@@ -512,7 +498,7 @@ export default function ListingDetailPage() {
             </div>
           </div>
 
-          {/* ✅ ✅ ✅ 租客模板区（你要放的就是这里） */}
+          {/* ✅ ✅ ✅ 租客模板区 */}
           <div className="mt-4 rounded-2xl bg-zinc-900 p-5">
             <div className="flex items-center justify-between">
               <div>
@@ -616,9 +602,7 @@ export default function ListingDetailPage() {
                   <select
                     className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
                     value={infoDraft?.status ?? "available"}
-                    onChange={(e) =>
-                      setInfoDraft((d: any) => ({ ...d, status: e.target.value }))
-                    }
+                    onChange={(e) => setInfoDraft((d: any) => ({ ...d, status: e.target.value }))}
                   >
                     <option value="available">available</option>
                     <option value="pending">pending</option>
@@ -644,7 +628,7 @@ export default function ListingDetailPage() {
                     }
                   />
                 ) : (
-                  <div>{availabilityText(item.available_from)}</div>
+                  <div>{availabilityLabel(item.available_from)}</div>
                 )}
               </div>
 
@@ -844,7 +828,9 @@ export default function ListingDetailPage() {
               <>
                 <button
                   type="button"
-                  onClick={() => setViewerIndex((i) => (i - 1 + photoUrls.length) % photoUrls.length)}
+                  onClick={() =>
+                    setViewerIndex((i) => (i - 1 + photoUrls.length) % photoUrls.length)
+                  }
                   className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-white hover:bg-black/70"
                 >
                   ‹
@@ -889,7 +875,8 @@ export default function ListingDetailPage() {
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {photos.map((p, idx) => {
                   const url =
-                    supabase.storage.from("listing-photos").getPublicUrl(p.storage_path).data.publicUrl;
+                    supabase.storage.from("listing-photos").getPublicUrl(p.storage_path).data
+                      .publicUrl;
                   const checked = selectedPhotoIds.has(p.id);
 
                   return (
