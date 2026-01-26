@@ -43,6 +43,27 @@ function availabilityLabel(availableFrom: any) {
 
   return `Available ${bucket} ${mon}`;
 }
+function availabilityText(availableFrom: string | null | undefined) {
+  if (!availableFrom) return "Ready move in";
+
+  // 用“日期”比较，避免时区造成今天/明天错位
+  const today = new Date();
+  const t = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+
+  const d0 = new Date(availableFrom);
+  const d = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate()).getTime();
+
+  if (!Number.isFinite(d)) return "Ready move in";
+
+  // 日期已到/已过
+  if (d <= t) return "Ready move in";
+
+  // 还没到：early / mid / end + 月份
+  const day = d0.getDate();
+  const bucket = day <= 10 ? "early" : day <= 20 ? "mid" : "end";
+  const mon = d0.toLocaleString("en-US", { month: "short" }); // Feb
+  return `Available ${bucket} ${mon}`;
+}
 
 /** ✅ 租客模板：输出你 WhatsApp 的格式（按你图 1/2/3 的常用） */
 function buildTenantText(item: any) {
@@ -623,7 +644,7 @@ export default function ListingDetailPage() {
                     }
                   />
                 ) : (
-                  <div>{availabilityLabel(item.available_from)}</div>
+                  <div>{availabilityText(item.available_from)}</div>
                 )}
               </div>
 
