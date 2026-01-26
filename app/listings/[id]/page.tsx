@@ -60,9 +60,7 @@ export default function ListingDetailPage() {
 
   const photoUrls = useMemo(() => {
     return photos.map(
-      (p) =>
-        supabase.storage.from("listing-photos").getPublicUrl(p.storage_path).data
-          .publicUrl
+      (p) => supabase.storage.from("listing-photos").getPublicUrl(p.storage_path).data.publicUrl
     );
   }, [photos]);
 
@@ -263,9 +261,12 @@ export default function ListingDetailPage() {
       bathrooms: infoDraft.bathrooms === "" ? null : Number(infoDraft.bathrooms) || null,
       carparks: infoDraft.carparks === "" ? null : Number(infoDraft.carparks) || null,
       price: infoDraft.price === "" ? null : Number(infoDraft.price) || null,
+
       type: infoDraft.type,
       status: infoDraft.status,
       available_from: infoDraft.available_from || null,
+
+      furnish: infoDraft?.furnish || null, // ✅ Furnish
     };
 
     const { error } = await supabase.from("listings").update(payload).eq("id", id);
@@ -351,11 +352,7 @@ export default function ListingDetailPage() {
 
         <div className="mt-5">
           {/* ✅ 只显示 Carousel（不铺缩略图） */}
-          <div
-            className="cursor-zoom-in"
-            onClick={() => openViewer(0)}
-            title="Click to zoom"
-          >
+          <div className="cursor-zoom-in" onClick={() => openViewer(0)} title="Click to zoom">
             <PhotoCarousel urls={photoUrls} />
           </div>
 
@@ -452,9 +449,7 @@ export default function ListingDetailPage() {
                   <select
                     className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
                     value={infoDraft?.type ?? "rent"}
-                    onChange={(e) =>
-                      setInfoDraft((d: any) => ({ ...d, type: e.target.value }))
-                    }
+                    onChange={(e) => setInfoDraft((d: any) => ({ ...d, type: e.target.value }))}
                   >
                     <option value="rent">rent</option>
                     <option value="sale">sale</option>
@@ -501,6 +496,24 @@ export default function ListingDetailPage() {
                   <div>{item.available_from ?? "—"}</div>
                 )}
               </div>
+
+              {/* ✅ Furnish（Fully / Partial） */}
+              <div className="col-span-2">
+                <div className="text-xs text-zinc-400 mb-1">Furnish</div>
+                {editingInfo ? (
+                  <select
+                    className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+                    value={infoDraft?.furnish ?? ""}
+                    onChange={(e) => setInfoDraft((d: any) => ({ ...d, furnish: e.target.value }))}
+                  >
+                    <option value="">— Select —</option>
+                    <option value="Fully">Fully furnished</option>
+                    <option value="Partial">Partial furnished</option>
+                  </select>
+                ) : (
+                  <div>{item.furnish ?? "—"}</div>
+                )}
+              </div>
             </div>
 
             <div>
@@ -509,9 +522,7 @@ export default function ListingDetailPage() {
                 <input
                   className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
                   value={infoDraft?.condo_name ?? ""}
-                  onChange={(e) =>
-                    setInfoDraft((d: any) => ({ ...d, condo_name: e.target.value }))
-                  }
+                  onChange={(e) => setInfoDraft((d: any) => ({ ...d, condo_name: e.target.value }))}
                 />
               ) : (
                 <div className="text-white font-medium">{item.condo_name}</div>
@@ -547,9 +558,7 @@ export default function ListingDetailPage() {
                       type="number"
                       className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
                       value={infoDraft?.[key] ?? ""}
-                      onChange={(e) =>
-                        setInfoDraft((d: any) => ({ ...d, [key]: e.target.value }))
-                      }
+                      onChange={(e) => setInfoDraft((d: any) => ({ ...d, [key]: e.target.value }))}
                     />
                   ) : (
                     <div>{item[key] ?? "—"}</div>
@@ -600,9 +609,7 @@ export default function ListingDetailPage() {
                   type="number"
                   className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
                   value={deal.deductions === 0 ? "" : String(deal.deductions)}
-                  onChange={(e) =>
-                    setDeal((d) => ({ ...d, deductions: safeNum(e.target.value) }))
-                  }
+                  onChange={(e) => setDeal((d) => ({ ...d, deductions: safeNum(e.target.value) }))}
                 />
               </div>
             </div>
@@ -686,9 +693,7 @@ export default function ListingDetailPage() {
               <>
                 <button
                   type="button"
-                  onClick={() =>
-                    setViewerIndex((i) => (i - 1 + photoUrls.length) % photoUrls.length)
-                  }
+                  onClick={() => setViewerIndex((i) => (i - 1 + photoUrls.length) % photoUrls.length)}
                   className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-white hover:bg-black/70"
                 >
                   ‹
@@ -706,7 +711,7 @@ export default function ListingDetailPage() {
         </div>
       )}
 
-      {/* ✅ Manage modal：勾选要删的照片（不在页面铺一堆图） */}
+      {/* ✅ Manage modal：勾选要删的照片 */}
       {manageOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center"
@@ -733,8 +738,7 @@ export default function ListingDetailPage() {
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {photos.map((p, idx) => {
                   const url =
-                    supabase.storage.from("listing-photos").getPublicUrl(p.storage_path).data
-                      .publicUrl;
+                    supabase.storage.from("listing-photos").getPublicUrl(p.storage_path).data.publicUrl;
                   const checked = selectedPhotoIds.has(p.id);
 
                   return (
@@ -779,9 +783,7 @@ export default function ListingDetailPage() {
             )}
 
             <div className="mt-5 flex items-center justify-between">
-              <div className="text-xs text-zinc-400">
-                Selected: {selectedPhotoIds.size}
-              </div>
+              <div className="text-xs text-zinc-400">Selected: {selectedPhotoIds.size}</div>
 
               <button
                 type="button"
