@@ -7,34 +7,29 @@ const supabase = createClient(
 );
 
 export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  _req: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
-    const id = params.id;
+    const { id } = context.params;
 
     if (!id) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
 
-    // delete photos db
-    await supabase.from("listing_photos").delete().eq("listing_id", id);
+    // 先删关联表
+    const r1 = await supabase.from("listing_photos").delete().eq("listing_id", id);
+    if (r1.error) return NextResponse.json({ error: r1.error.message }, { status: 500 });
 
-    // delete deal
-    await supabase.from("deals").delete().eq("listing_id", id);
+    const r2 = await supabase.from("deals").delete().eq("listing_id", id);
+    if (r2.error) return NextResponse.json({ error: r2.error.message }, { status: 500 });
 
-    // delete listing
-    const { error } = await supabase.from("listings").delete().eq("id", id);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    // 再删主表
+    const r3 = await supabase.from("listings").delete().eq("id", id);
+    if (r3.error) return NextResponse.json({ error: r3.error.message }, { status: 500 });
 
     return NextResponse.json({ success: true });
   } catch (e: any) {
-    return NextResponse.json(
-      { error: e?.message || "Server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: e?.message || "Server error" }, { status: 500 });
   }
 }
