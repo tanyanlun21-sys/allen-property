@@ -4,7 +4,16 @@ import { useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 type ListingType = "rent" | "sale";
-type ListingStatus = "available" | "pending" | "booked" | "closed" | "inactive";
+
+type ListingStatus =
+  | "New"
+  | "Available"
+  | "Follow-up"
+  | "Viewing"
+  | "Negotiating"
+  | "Booked"
+  | "Closed"
+  | "Inactive";
 
 type Form = {
   type: ListingType;
@@ -29,7 +38,7 @@ function toNullableNumber(v: string): number | null {
 export default function NewListingPage() {
   const [form, setForm] = useState<Form>({
     type: "rent",
-    status: "available",
+    status: "New",
     condo_name: "",
     area: "",
     sqft: "",
@@ -62,7 +71,7 @@ export default function NewListingPage() {
 
     // ✅ Available From 只在 status=available 时才写入（其他状态自动清空）
     const availableFrom =
-      form.status === "available" && form.available_from.trim() !== ""
+      form.status === "Available" && form.available_from.trim() !== ""
         ? form.available_from
         : null;
 
@@ -131,7 +140,7 @@ export default function NewListingPage() {
                 const next = e.target.value as ListingStatus;
 
                 // ✅ 防误操作：从 available 切到其他状态时，提醒会清空日期
-                if (form.status === "available" && next !== "available" && form.available_from) {
+                if (form.status === "Available" && next !== "Available" && form.available_from) {
                   const ok = confirm("你正在把状态改为非 Available，将会清空 Available From 日期。确定继续吗？");
                   if (!ok) return;
                 }
@@ -139,7 +148,7 @@ export default function NewListingPage() {
                 setForm((f) => ({
                   ...f,
                   status: next,
-                  available_from: next === "available" ? f.available_from : "",
+                  available_from: next === "Available" ? f.available_from : "",
                 }));
               }}
             >
@@ -174,7 +183,7 @@ export default function NewListingPage() {
               <div className="text-xs text-zinc-400 mb-1">Available From</div>
               <input
                 type="date"
-                disabled={form.status !== "available"}
+                disabled={form.status !== "Available"}
                 className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none disabled:opacity-50"
                 value={form.available_from}
                 onChange={(e) =>
