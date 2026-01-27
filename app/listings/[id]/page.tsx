@@ -357,7 +357,7 @@ export default function ListingDetailPage() {
       next_follow_up: infoDraft?.next_follow_up ? infoDraft.next_follow_up : null,
       furnish: infoDraft?.furnish || null,
       owner_whatsapp: infoDraft?.owner_whatsapp?.trim() ? infoDraft.owner_whatsapp.trim() : null,
-      raw_text: infoDraft?.raw_text?.trim() ? infoDraft.raw_text : null,
+      raw_text: infoDraft?.raw_text?.trim() ? infoDraft.raw_text.trim() : null,
 
       // ✅ Step 3：任何保存都刷新 last_update
       last_update: new Date().toISOString(),
@@ -682,7 +682,8 @@ export default function ListingDetailPage() {
     <div>{item.owner_whatsapp ?? "—"}</div>
   )}
 </div>
-<div className="mt-2">
+{/* ✅ Raw paste（从 Quick Add 进来的原始文字） */}
+<div className="col-span-2">
   <div className="text-xs text-zinc-400 mb-1">Raw paste</div>
 
   {editingInfo ? (
@@ -693,12 +694,9 @@ export default function ListingDetailPage() {
       placeholder="paste text..."
     />
   ) : (
-    <textarea
-      readOnly
-      className="w-full min-h-28 rounded-lg bg-zinc-800 px-3 py-2 text-sm text-zinc-200 outline-none"
-      value={item.raw_text ?? ""}
-      placeholder="—"
-    />
+    <div className="whitespace-pre-wrap text-zinc-200">
+      {item.raw_text ?? "—"}
+    </div>
   )}
 </div>
             <div>
