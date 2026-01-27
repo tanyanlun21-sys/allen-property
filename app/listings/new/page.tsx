@@ -143,11 +143,14 @@ export default function NewListingPage() {
                 }));
               }}
             >
-              <option value="available">Available</option>
-              <option value="pending">Pending</option>
-              <option value="booked">Booked</option>
-              <option value="closed">Closed</option>
-              <option value="inactive">Inactive</option>
+              <option value="New">New</option>
+<option value="Available">Available</option>
+<option value="Follow-up">Follow-up</option>
+<option value="Viewing">Viewing</option>
+<option value="Negotiating">Negotiating</option>
+<option value="Booked">Booked</option>
+<option value="Closed">Closed</option>
+<option value="Inactive">Inactive</option>
             </select>
           </div>
 
