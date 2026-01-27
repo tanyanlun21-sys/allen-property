@@ -275,11 +275,18 @@ export default function ListingsPage() {
 
           <div className="flex gap-2">
             <a
-              href="/listings/new"
-              className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black hover:opacity-90"
-            >
-              + New
-            </a>
+  href="/listings/quick"
+  className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black hover:opacity-90"
+>
+  ⚡ Quick Add
+</a>
+
+<a
+  href="/listings/new"
+  className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-white hover:bg-zinc-700"
+>
+  + New
+</a>
 
             <button
               onClick={async () => {
