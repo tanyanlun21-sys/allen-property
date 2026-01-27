@@ -241,23 +241,28 @@ export default function ListingsPage() {
   }, [items, viewTab, typeTab, status]);
 
   const markProcessed = async (id: string) => {
-    setBusyId(id);
+  setBusyId(id);
 
-    // 乐观更新：立刻从 inbox 移走
-    setItems((prev) => prev.map((x) => (x.id === id ? { ...x, inbox: false } : x)));
+  // 乐观更新：立刻从 inbox 移走
+  setItems((prev) => prev.map((x) => (x.id === id ? { ...x, inbox: false } : x)));
 
-    const { error } = await supabase.from("listings").update({ inbox: false }).eq("id", id);
+  const { error } = await supabase
+    .from("listings")
+    .update({
+      inbox: false,
+      last_update: new Date().toISOString(), // ✅ Step 3/5：任何动作都算“更新”
+    })
+    .eq("id", id);
 
-    if (error) {
-      // rollback
-      setItems((prev) => prev.map((x) => (x.id === id ? { ...x, inbox: true } : x)));
-    } else {
-      // reload 保证 view/aging 正确
-      await load();
-    }
+  if (error) {
+    // rollback
+    setItems((prev) => prev.map((x) => (x.id === id ? { ...x, inbox: true } : x)));
+  } else {
+    await load(); // reload 保证 view/aging 正确
+  }
 
-    setBusyId(null);
-  };
+  setBusyId(null);
+};
 
   return (
     <main className="min-h-screen bg-black text-white">

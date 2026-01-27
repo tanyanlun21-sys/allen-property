@@ -69,11 +69,13 @@ export default function NewListingPage() {
       return;
     }
 
-    // ✅ Available From 只在 status=available 时才写入（其他状态自动清空）
+    // ✅ Available From 只在 status=Available 时才写入（其他状态自动清空）
     const availableFrom =
       form.status === "Available" && form.available_from.trim() !== ""
         ? form.available_from
         : null;
+
+    const nowIso = new Date().toISOString();
 
     const payload: any = {
       user_id: userId,
@@ -86,9 +88,11 @@ export default function NewListingPage() {
       bathrooms: toNullableNumber(form.bathrooms),
       carparks: toNullableNumber(form.carparks),
       price: toNullableNumber(form.price),
-
-      // ✅ 新增：Available From（你的 listings 表要有 available_from 这列）
       available_from: availableFrom,
+
+      // ✅ Step 2：创建时写入
+      created_at: nowIso,
+      last_update: nowIso,
     };
 
     const { data, error } = await supabase
@@ -139,9 +143,11 @@ export default function NewListingPage() {
               onChange={(e) => {
                 const next = e.target.value as ListingStatus;
 
-                // ✅ 防误操作：从 available 切到其他状态时，提醒会清空日期
+                // ✅ 防误操作：从 Available 切到其他状态时，提醒会清空日期
                 if (form.status === "Available" && next !== "Available" && form.available_from) {
-                  const ok = confirm("你正在把状态改为非 Available，将会清空 Available From 日期。确定继续吗？");
+                  const ok = confirm(
+                    "你正在把状态改为非 Available，将会清空 Available From 日期。确定继续吗？"
+                  );
                   if (!ok) return;
                 }
 
@@ -153,13 +159,13 @@ export default function NewListingPage() {
               }}
             >
               <option value="New">New</option>
-<option value="Available">Available</option>
-<option value="Follow-up">Follow-up</option>
-<option value="Viewing">Viewing</option>
-<option value="Negotiating">Negotiating</option>
-<option value="Booked">Booked</option>
-<option value="Closed">Closed</option>
-<option value="Inactive">Inactive</option>
+              <option value="Available">Available</option>
+              <option value="Follow-up">Follow-up</option>
+              <option value="Viewing">Viewing</option>
+              <option value="Negotiating">Negotiating</option>
+              <option value="Booked">Booked</option>
+              <option value="Closed">Closed</option>
+              <option value="Inactive">Inactive</option>
             </select>
           </div>
 
@@ -177,7 +183,6 @@ export default function NewListingPage() {
             onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
           />
 
-          {/* ✅ Available From */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="text-xs text-zinc-400 mb-1">Available From</div>
@@ -258,7 +263,6 @@ export default function NewListingPage() {
           </button>
         </div>
 
-        {/* ✅ 防误操作：离开前提醒（简单版，不会很烦） */}
         <div className="mt-4 text-xs text-zinc-500">
           提示：如果你填到一半想返回 listings，先 Create 再回去，避免丢数据。
         </div>

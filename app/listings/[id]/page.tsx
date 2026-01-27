@@ -51,7 +51,7 @@ function availabilityLabel(availableFrom: any) {
   return `Available ${bucket} ${mon}`;
 }
 
-/** ✅ 租客模板：输出你 WhatsApp 的格式（按你图 1/2/3 的常用） */
+/** ✅ 租客模板 */
 function buildTenantText(item: any) {
   const condo = (item?.condo_name ?? "").trim() || "—";
   const sqft = item?.sqft ? `${item.sqft} sqft` : null;
@@ -67,7 +67,6 @@ function buildTenantText(item: any) {
       ? `no parking`
       : null;
 
-  // 你数据库里 furnish 是 "Fully" / "Partial"
   const furnish =
     item?.furnish === "Fully"
       ? "Fully Furnished"
@@ -77,8 +76,6 @@ function buildTenantText(item: any) {
 
   const price = item?.price != null && item.price !== "" ? rm(item.price) : null;
 
-  // ✅ 关键：不要再输出 Available from 2026-xx-xx
-  // 统一用 smart label：Ready move in / Available early Feb ...
   const availText = availabilityLabel(item?.available_from);
 
   const lines: string[] = [];
@@ -87,7 +84,6 @@ function buildTenantText(item: any) {
 
   if (sqft) lines.push(sqft);
 
-  // 1 Bedroom 1 Bathroom（你图 1/3）
   if (bed || bath) {
     const parts = [bed, bath].filter(Boolean);
     if (parts.length) lines.push(parts.join(" "));
@@ -125,22 +121,18 @@ export default function ListingDetailPage() {
 
   const [item, setItem] = useState<any>(null);
 
-  // Listing info edit
   const [editingInfo, setEditingInfo] = useState(false);
   const [infoDraft, setInfoDraft] = useState<any>(null);
   const [savingInfo, setSavingInfo] = useState(false);
 
-  // Photos
   const [photos, setPhotos] = useState<any[]>([]);
   const [manageOpen, setManageOpen] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [deletingPhotos, setDeletingPhotos] = useState(false);
 
-  // Viewer (zoom)
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
 
-  // Deal
   const [deal, setDeal] = useState<Deal>({
     gross: 0,
     commission_rate: 0,
@@ -166,7 +158,6 @@ export default function ListingDetailPage() {
     return Math.max(0, localCommissionAmount - safeNum(deal.deductions));
   }, [localCommissionAmount, deal.deductions]);
 
-  // ✅ 租客模板文本（随 item 自动更新）
   const tenantText = useMemo(() => {
     if (!item) return "";
     return buildTenantText(item);
@@ -182,7 +173,6 @@ export default function ListingDetailPage() {
       return;
     }
 
-    // listing
     const { data, error } = await supabase.from("listings").select("*").eq("id", id).single();
     if (error) {
       setErr(error.message);
@@ -192,7 +182,6 @@ export default function ListingDetailPage() {
     setItem(data);
     setInfoDraft(data);
 
-    // photos
     const { data: ph, error: phErr } = await supabase
       .from("listing_photos")
       .select("*")
@@ -206,7 +195,6 @@ export default function ListingDetailPage() {
       setPhotos(ph ?? []);
     }
 
-    // deal (generated fields are read-only)
     const { data: d, error: dErr } = await supabase
       .from("deals")
       .select("gross,commission_rate,deductions,notes,commission_amount,net")
@@ -366,8 +354,11 @@ export default function ListingDetailPage() {
       status: infoDraft.status,
       available_from: infoDraft.available_from || null,
 
-      furnish: infoDraft?.furnish || null, // ✅ Furnish
+      furnish: infoDraft?.furnish || null,
       owner_whatsapp: infoDraft?.owner_whatsapp?.trim() ? infoDraft.owner_whatsapp.trim() : null,
+
+      // ✅ Step 3：任何保存都刷新 last_update
+      last_update: new Date().toISOString(),
     };
 
     const { error } = await supabase.from("listings").update(payload).eq("id", id);
@@ -432,6 +423,7 @@ export default function ListingDetailPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="mx-auto max-w-3xl px-4 py-6">
+        {/* 下面内容保持你原样（我没动 UI 结构） */}
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xl font-semibold">{item.condo_name}</div>
