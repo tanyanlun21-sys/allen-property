@@ -605,11 +605,14 @@ export default function ListingDetailPage() {
                     value={infoDraft?.status ?? "available"}
                     onChange={(e) => setInfoDraft((d: any) => ({ ...d, status: e.target.value }))}
                   >
-                    <option value="available">available</option>
-                    <option value="pending">pending</option>
-                    <option value="booked">booked</option>
-                    <option value="closed">closed</option>
-                    <option value="inactive">inactive</option>
+                    <option value="New">New</option>
+<option value="Available">Available</option>
+<option value="Follow-up">Follow-up</option>
+<option value="Viewing">Viewing</option>
+<option value="Negotiating">Negotiating</option>
+<option value="Booked">Booked</option>
+<option value="Closed">Closed</option>
+<option value="Inactive">Inactive</option>
                   </select>
                 ) : (
                   <div>{item.status}</div>
