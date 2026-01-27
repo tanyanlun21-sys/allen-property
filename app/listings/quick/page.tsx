@@ -185,8 +185,8 @@ export default function QuickAddPage() {
       priority: 2,
 
       // ✅ 快速存原文 & link
-      quick_raw: raw.trim() || null,
-      source_link: link.trim() || null,
+      raw_text: raw.trim() ? raw.trim() : null,
+    
 
       // ✅ 你已有 last_update trigger 也没关系；这里写不写都行
       last_update: new Date().toISOString(),
