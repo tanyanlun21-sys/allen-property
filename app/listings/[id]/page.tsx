@@ -354,6 +354,7 @@ export default function ListingDetailPage() {
       status: infoDraft.status,
       available_from: infoDraft.available_from || null,
 
+      next_follow_up: infoDraft?.next_follow_up ? infoDraft.next_follow_up : null,
       furnish: infoDraft?.furnish || null,
       owner_whatsapp: infoDraft?.owner_whatsapp?.trim() ? infoDraft.owner_whatsapp.trim() : null,
 
@@ -627,6 +628,23 @@ export default function ListingDetailPage() {
                   <div>{availabilityLabel(item.available_from)}</div>
                 )}
               </div>
+
+{/* ✅ Next follow-up */}
+<div className="col-span-2">
+  <div className="text-xs text-zinc-400 mb-1">Next follow-up</div>
+  {editingInfo ? (
+    <input
+      type="date"
+      className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+      value={infoDraft?.next_follow_up ?? ""}
+      onChange={(e) =>
+        setInfoDraft((d: any) => ({ ...d, next_follow_up: e.target.value }))
+      }
+    />
+  ) : (
+    <div>{item.next_follow_up ? new Date(item.next_follow_up).toLocaleDateString() : "—"}</div>
+  )}
+</div>
 
               {/* ✅ Furnish（Fully / Partial） */}
               <div className="col-span-2">
