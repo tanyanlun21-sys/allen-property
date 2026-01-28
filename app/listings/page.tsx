@@ -128,6 +128,7 @@ export default function ListingsPage() {
 
   const [typeTab, setTypeTab] = useState<"all" | "rent" | "sale">("all");
   const [status, setStatus] = useState<StatusFilter>("all");
+  const [statusOpen, setStatusOpen] = useState(false);
 
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -350,19 +351,46 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
           </div>
 
           {/* Status */}
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as any)}
-            className="rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-sm text-white outline-none
-            shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
-          >
-            <option value="all">All status</option>
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+<div className="relative">
+  <button
+    onClick={() => setStatusOpen(v => !v)}
+    className="flex items-center gap-2 rounded-lg bg-white/5 border border-cyan-400/30 backdrop-blur px-3 py-2 text-sm text-cyan-200
+    shadow-[0_0_18px_rgba(34,211,238,0.25)]
+    hover:bg-white/10 transition"
+  >
+    <span>{status === "all" ? "All status" : status}</span>
+    <span className="text-xs opacity-70">▾</span>
+  </button>
+
+  {statusOpen && (
+    <div className="absolute z-50 mt-2 min-w-[160px] rounded-xl bg-[#050B14] border border-cyan-400/30 backdrop-blur
+    shadow-[0_0_30px_rgba(34,211,238,0.35)] overflow-hidden">
+
+      <div
+        onClick={() => {
+          setStatus("all" as any);
+          setStatusOpen(false);
+        }}
+        className="px-3 py-2 text-sm cursor-pointer hover:bg-cyan-400/20"
+      >
+        All status
+      </div>
+
+      {STATUS_OPTIONS.map((s) => (
+        <div
+          key={s}
+          onClick={() => {
+            setStatus(s as any);
+            setStatusOpen(false);
+          }}
+          className="px-3 py-2 text-sm cursor-pointer hover:bg-cyan-400/20"
+        >
+          {s}
+        </div>
+      ))}
+    </div>
+  )}
+</div>
 
           <button
             onClick={load}
