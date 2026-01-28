@@ -423,7 +423,10 @@ export default function ListingDetailPage() {
   if (!item) return <main className="min-h-screen bg-black text-white p-6">Not found.</main>;
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main
+  className="min-h-screen text-white bg-[#06070A]
+  bg-[radial-gradient(800px_circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(600px_circle_at_80%_30%,rgba(59,130,246,0.10),transparent_40%),radial-gradient(900px_circle_at_50%_90%,rgba(168,85,247,0.08),transparent_45%)]"
+>
       <div className="mx-auto max-w-3xl px-4 py-6">
         {/* 下面内容保持你原样（我没动 UI 结构） */}
         <div className="flex items-center justify-between gap-3">
@@ -435,7 +438,8 @@ export default function ListingDetailPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={deleteListing}
-              className="text-sm rounded-lg bg-zinc-900 px-3 py-2 text-red-300 hover:bg-zinc-800 hover:text-red-200"
+              className="text-sm rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-red-300 hover:bg-zinc-800 hover:text-red-200
+              shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
             >
               Delete listing
             </button>
@@ -455,7 +459,8 @@ export default function ListingDetailPage() {
           <div className="mt-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <label className="text-sm text-zinc-300">
-                <span className="rounded-lg bg-zinc-900 px-3 py-2 hover:bg-zinc-800 cursor-pointer inline-block">
+                <span className="rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 hover:bg-zinc-800 cursor-pointer inline-block
+                shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
                   Upload photos
                 </span>
                 <input
@@ -473,7 +478,8 @@ export default function ListingDetailPage() {
                   setManageOpen(true);
                   setSelectedPhotoIds(new Set());
                 }}
-                className="text-sm rounded-lg bg-zinc-900 px-3 py-2 text-zinc-200 hover:bg-zinc-800"
+                className="text-sm rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-zinc-200 hover:bg-zinc-800
+                shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
               >
                 Manage photos
               </button>
@@ -494,7 +500,8 @@ export default function ListingDetailPage() {
           </div>
 
           {/* ✅ ✅ ✅ 租客模板区 */}
-          <div className="mt-4 rounded-2xl bg-zinc-900 p-5">
+          <div className="mt-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-base font-semibold text-white">Tenant template</div>
@@ -507,7 +514,11 @@ export default function ListingDetailPage() {
                 <button
                   type="button"
                   onClick={() => copyText(tenantText)}
-                  className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black hover:opacity-90"
+                  className="rounded-lg px-4 py-2 text-sm font-semibold text-black
+bg-cyan-400 hover:bg-cyan-300
+shadow-[0_10px_30px_rgba(34,211,238,0.35)]
+transition-all duration-150
+active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
                 >
                   📋 Copy
                 </button>
@@ -535,7 +546,8 @@ export default function ListingDetailPage() {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {/* Listing info */}
-          <div className="rounded-2xl bg-zinc-900 p-5 space-y-3 text-sm text-zinc-200">
+          <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 space-y-3 text-sm text-zinc-200
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="flex items-center justify-between">
               <div className="text-base font-semibold text-white">Listing info</div>
 
@@ -546,7 +558,7 @@ export default function ListingDetailPage() {
                     setInfoDraft(item);
                     setEditingInfo(true);
                   }}
-                  className="text-xs rounded-lg bg-zinc-800 px-3 py-2 text-zinc-200 hover:bg-zinc-700"
+                  className="text-xs rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-zinc-200 hover:bg-white/10"
                 >
                   Edit
                 </button>
@@ -558,7 +570,7 @@ export default function ListingDetailPage() {
                       setInfoDraft(item);
                       setEditingInfo(false);
                     }}
-                    className="text-xs rounded-lg bg-zinc-800 px-3 py-2 text-zinc-200 hover:bg-zinc-700"
+                    className="text-xs rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-zinc-200 hover:bg-white/10"
                   >
                     Cancel
                   </button>
@@ -566,7 +578,12 @@ export default function ListingDetailPage() {
                     type="button"
                     disabled={savingInfo}
                     onClick={saveListingInfo}
-                    className="text-xs rounded-lg bg-white px-3 py-2 text-black font-medium disabled:opacity-60"
+                    className="text-xs rounded-lg px-3 py-2 text-sm font-semibold text-black
+bg-cyan-400 hover:bg-cyan-300
+shadow-[0_6px_18px_rgba(34,211,238,0.35)]
+transition-all duration-150
+active:scale-[0.97]
+disabled:opacity-40 disabled:shadow-none"
                   >
                     {savingInfo ? "Saving..." : "Save"}
                   </button>
@@ -752,12 +769,13 @@ export default function ListingDetailPage() {
           </div>
 
           {/* Income / Deal */}
-          <div className="rounded-2xl bg-zinc-900 p-5 space-y-3">
+          <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 space-y-3
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="flex items-center justify-between">
               <div className="text-base font-semibold text-white">Income / Deal</div>
               <button
                 onClick={clearDeal}
-                className="text-xs rounded-lg bg-zinc-800 px-3 py-2 text-zinc-200 hover:bg-zinc-700"
+                className="text-xs rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-zinc-200 hover:bg-white/10"
               >
                 Clear Deal
               </button>
@@ -820,7 +838,12 @@ export default function ListingDetailPage() {
             <button
               onClick={saveDeal}
               disabled={savingDeal}
-              className="w-full rounded-lg bg-white py-2 text-black font-medium disabled:opacity-60"
+              className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-black
+bg-cyan-400 hover:bg-cyan-300
+shadow-[0_6px_18px_rgba(34,211,238,0.35)]
+transition-all duration-150
+active:scale-[0.97]
+disabled:opacity-40 disabled:shadow-none"
             >
               {savingDeal ? "Saving..." : "Save income"}
             </button>
@@ -830,14 +853,16 @@ export default function ListingDetailPage() {
         <div className="mt-6 flex items-center justify-between gap-3">
           <a
             href="/dashboard"
-            className="inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
+            className="inline-block rounded-lg bg-white/5 border border-white/10 backdrop-blur px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800
+            shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
           >
             View dashboard →
           </a>
 
           <a
             href="/listings"
-            className="inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
+            className="inline-block rounded-lg bg-white/5 border border-white/10 backdrop-blur px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800
+            shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
           >
             Back to listings
           </a>
@@ -903,7 +928,8 @@ export default function ListingDetailPage() {
           onClick={() => setManageOpen(false)}
         >
           <div
-            className="w-[95vw] max-w-3xl rounded-2xl bg-zinc-900 p-5"
+            className="w-[95vw] max-w-3xl rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
+            shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -911,7 +937,7 @@ export default function ListingDetailPage() {
               <button
                 type="button"
                 onClick={() => setManageOpen(false)}
-                className="rounded-lg bg-zinc-800 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-700"
+                className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-zinc-200 hover:bg-white/10"
               >
                 Close
               </button>

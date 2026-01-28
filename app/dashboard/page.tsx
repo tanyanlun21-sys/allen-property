@@ -279,7 +279,10 @@ export default function DashboardPage() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main
+  className="min-h-screen text-white bg-[#06070A]
+  bg-[radial-gradient(800px_circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(600px_circle_at_80%_30%,rgba(59,130,246,0.10),transparent_40%),radial-gradient(900px_circle_at_50%_90%,rgba(168,85,247,0.08),transparent_45%)]"
+>
       <div className="mx-auto max-w-6xl px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between gap-3">
@@ -291,7 +294,8 @@ export default function DashboardPage() {
           <div className="flex gap-2">
             <a
               href="/listings"
-              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
+              className="rounded-lg bg-white/5 border border-white/10 backdrop-blur px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800
+              shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
             >
               ← Listings
             </a>
@@ -299,7 +303,11 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={load}
-              className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black hover:opacity-90"
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-black
+bg-cyan-400 hover:bg-cyan-300
+shadow-[0_10px_30px_rgba(34,211,238,0.35)]
+transition-all duration-150
+active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
             >
               Refresh
             </button>
@@ -308,7 +316,8 @@ export default function DashboardPage() {
 
         {/* Controls */}
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          <div className="rounded-2xl bg-zinc-900 p-4 inline-flex items-center gap-3">
+          <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-4 inline-flex items-center gap-3
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="text-sm text-zinc-300">Type</div>
             <select
               value={typeFilter}
@@ -321,7 +330,8 @@ export default function DashboardPage() {
             </select>
           </div>
 
-          <div className="rounded-2xl bg-zinc-900 p-4 inline-flex items-center gap-3">
+          <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-4 inline-flex items-center gap-3
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="text-sm text-zinc-300">Pipeline month</div>
             <input
               type="month"
@@ -336,25 +346,29 @@ export default function DashboardPage() {
 
         {/* Top KPI row */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="rounded-2xl bg-zinc-900 p-5">
+          <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="text-xs text-zinc-400">Today actions</div>
             <div className="mt-2 text-3xl font-semibold">{followUpsDue.length}</div>
             <div className="mt-2 text-xs text-zinc-500">Due / overdue follow-ups</div>
           </div>
 
-          <div className="rounded-2xl bg-zinc-900 p-5">
+          <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="text-xs text-zinc-400">Inbox</div>
             <div className="mt-2 text-3xl font-semibold">{inboxList.length}</div>
             <div className="mt-2 text-xs text-zinc-500">Need processing</div>
           </div>
 
-          <div className="rounded-2xl bg-zinc-900 p-5">
+          <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="text-xs text-zinc-400">Aging (7+ days)</div>
             <div className="mt-2 text-3xl font-semibold">{agingList.length}</div>
             <div className="mt-2 text-xs text-zinc-500">Cold listings</div>
           </div>
 
-          <div className="rounded-2xl bg-zinc-900 p-5">
+          <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="text-xs text-zinc-400">This month net</div>
             <div className="mt-2 text-3xl font-semibold">{rm(monthNet)}</div>
             <div className="mt-2 text-xs text-zinc-400">Deals: {monthDealsCount}</div>
@@ -364,7 +378,8 @@ export default function DashboardPage() {
         {/* Main blocks */}
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Today actions */}
-          <div className="rounded-2xl bg-zinc-900 p-5">
+          <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-base font-semibold">🔥 Today actions</div>
@@ -413,14 +428,18 @@ export default function DashboardPage() {
                         <div className="flex flex-col gap-2">
                           <a
                             href={`/listings/${x.id}`}
-                            className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-black hover:opacity-90 text-center"
+                            className="rounded-lg px-4 py-2 text-sm font-semibold text-black
+bg-cyan-400 hover:bg-cyan-300
+shadow-[0_10px_30px_rgba(34,211,238,0.35)]
+transition-all duration-150
+active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
                           >
                             Open
                           </a>
                           <button
                             type="button"
                             onClick={() => clearFollowUp(x.id)}
-                            className="rounded-lg bg-zinc-800 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-700"
+                            className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-zinc-200 hover:bg-white/10"
                           >
                             Clear
                           </button>
@@ -434,7 +453,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Inbox */}
-          <div className="rounded-2xl bg-zinc-900 p-5">
+          <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div>
               <div className="text-base font-semibold">🆕 Inbox</div>
               <div className="text-sm text-zinc-400">新房源先收进来，之后再整理</div>
@@ -478,14 +498,18 @@ export default function DashboardPage() {
                       <div className="flex flex-col gap-2">
                         <a
                           href={`/listings/${x.id}`}
-                          className="rounded-lg bg-zinc-800 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-700 text-center"
+                          className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-zinc-200 hover:bg-white/10 text-center"
                         >
                           Open
                         </a>
                         <button
                           type="button"
                           onClick={() => markProcessed(x.id)}
-                          className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-black hover:opacity-90"
+                          className="rounded-lg px-4 py-2 text-sm font-semibold text-black
+bg-cyan-400 hover:bg-cyan-300
+shadow-[0_10px_30px_rgba(34,211,238,0.35)]
+transition-all duration-150
+active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
                         >
                           Mark processed
                         </button>
@@ -498,7 +522,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Aging */}
-          <div className="rounded-2xl bg-zinc-900 p-5">
+          <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div>
               <div className="text-base font-semibold">❗ Aging / Cold</div>
               <div className="text-sm text-zinc-400">7 天以上没动：该重新跟进/换打法</div>
@@ -532,7 +557,11 @@ export default function DashboardPage() {
 
                       <a
                         href={`/listings/${x.id}`}
-                        className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-black hover:opacity-90 text-center"
+                        className="rounded-lg px-4 py-2 text-sm font-semibold text-black
+bg-cyan-400 hover:bg-cyan-300
+shadow-[0_10px_30px_rgba(34,211,238,0.35)]
+transition-all duration-150
+active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
                       >
                         Open
                       </a>
@@ -545,7 +574,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Pipeline mini table */}
-        <div className="mt-6 rounded-2xl bg-zinc-900 p-5 overflow-x-auto">
+        <div className="mt-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 overflow-x-auto
+        shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-base font-semibold">💰 Pipeline</div>
@@ -554,7 +584,7 @@ export default function DashboardPage() {
 
             <a
               href="/income"
-              className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-700"
+              className="rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-sm text-zinc-200 hover:bg-white/10"
             >
               Open income →
             </a>

@@ -209,7 +209,10 @@ export default function QuickAddPage() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main
+  className="min-h-screen text-white bg-[#06070A]
+  bg-[radial-gradient(800px_circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(600px_circle_at_80%_30%,rgba(59,130,246,0.10),transparent_40%),radial-gradient(900px_circle_at_50%_90%,rgba(168,85,247,0.08),transparent_45%)]"
+>
       <div className="mx-auto max-w-xl px-4 py-6">
         <div className="flex items-center justify-between">
           <div>
@@ -223,7 +226,8 @@ export default function QuickAddPage() {
           </a>
         </div>
 
-        <div className="mt-6 rounded-2xl bg-zinc-900 p-5 space-y-3">
+        <div className="mt-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 space-y-3
+        shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
           <div>
             <div className="text-xs text-zinc-400 mb-1">Paste text</div>
             <textarea
@@ -264,7 +268,9 @@ export default function QuickAddPage() {
           <button
             disabled={!canSave}
             onClick={save}
-            className="w-full rounded-lg bg-white py-2 text-black font-medium disabled:opacity-60"
+            className="w-full rounded-lg bg-cyan-400 text-black font-semibold disabled:opacity-60
+            hover:bg-cyan-300 active:scale-[0.98]
+shadow-[0_10px_30px_rgba(34,211,238,0.18)]"
           >
             {saving ? "Saving..." : "Save to Inbox"}
           </button>

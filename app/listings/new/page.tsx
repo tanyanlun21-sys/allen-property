@@ -112,7 +112,10 @@ export default function NewListingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main
+  className="min-h-screen text-white bg-[#06070A]
+  bg-[radial-gradient(800px_circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(600px_circle_at_80%_30%,rgba(59,130,246,0.10),transparent_40%),radial-gradient(900px_circle_at_50%_90%,rgba(168,85,247,0.08),transparent_45%)]"
+>
       <div className="mx-auto max-w-xl px-4 py-6">
         <div className="flex items-center justify-between">
           <div>
@@ -124,7 +127,8 @@ export default function NewListingPage() {
           </a>
         </div>
 
-        <div className="mt-6 rounded-2xl bg-zinc-900 p-5 space-y-3">
+        <div className="mt-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 space-y-3
+        shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
           <div className="grid grid-cols-2 gap-3">
             <select
               className="rounded-lg bg-zinc-800 px-3 py-2"
@@ -257,7 +261,12 @@ export default function NewListingPage() {
           <button
             disabled={!canCreate}
             onClick={create}
-            className="w-full rounded-lg bg-white py-2 text-black font-medium disabled:opacity-60"
+            className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-black
+bg-cyan-400 hover:bg-cyan-300
+shadow-[0_6px_18px_rgba(34,211,238,0.35)]
+transition-all duration-150
+active:scale-[0.97]
+disabled:opacity-40 disabled:shadow-none"
           >
             {saving ? "Creating..." : "Create"}
           </button>

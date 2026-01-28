@@ -265,7 +265,10 @@ export default function ListingsPage() {
 };
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main
+  className="min-h-screen text-white bg-[#06070A]
+  bg-[radial-gradient(800px_circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(600px_circle_at_80%_30%,rgba(59,130,246,0.10),transparent_40%),radial-gradient(900px_circle_at_50%_90%,rgba(168,85,247,0.08),transparent_45%)]"
+>
       <div className="mx-auto max-w-6xl px-4 py-6">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -276,14 +279,18 @@ export default function ListingsPage() {
           <div className="flex gap-2">
             <a
   href="/listings/quick"
-  className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black hover:opacity-90"
+  className="rounded-lg px-4 py-2 text-sm font-semibold text-black
+bg-cyan-400 hover:bg-cyan-300
+shadow-[0_10px_30px_rgba(34,211,238,0.35)]
+transition-all duration-150
+active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
 >
   ⚡ Quick Add
 </a>
 
 <a
   href="/listings/new"
-  className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-white hover:bg-zinc-700"
+  className="rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-sm text-white hover:bg-white/10"
 >
   + New
 </a>
@@ -293,7 +300,7 @@ export default function ListingsPage() {
                 await supabase.auth.signOut();
                 window.location.href = "/";
               }}
-              className="rounded-lg bg-zinc-800 px-4 py-2 text-sm hover:bg-zinc-700"
+              className="rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-sm hover:bg-white/10"
             >
               Logout
             </button>
@@ -302,7 +309,8 @@ export default function ListingsPage() {
 
         {/* ✅ 工作视图（Inbox/Active/All） */}
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          <div className="flex rounded-lg bg-zinc-900 p-1">
+          <div className="flex rounded-lg bg-white/5 border border-white/10 backdrop-blur p-1
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             {(
               [
                 { key: "inbox", label: `Inbox (${counts.inboxCount})` },
@@ -313,9 +321,11 @@ export default function ListingsPage() {
               <button
                 key={t.key}
                 onClick={() => setViewTab(t.key)}
-                className={`rounded-md px-3 py-1 text-sm ${
-                  viewTab === t.key ? "bg-white text-black" : "text-zinc-300 hover:text-white"
-                }`}
+                className={`rounded-md px-3 py-1 text-sm transition-all duration-200 ${
+  viewTab === t.key
+    ? "bg-cyan-400 text-black font-semibold shadow-[0_10px_30px_rgba(34,211,238,0.25)]"
+    : "text-zinc-300 hover:text-black hover:bg-cyan-300/80"
+}`}
               >
                 {t.label}
               </button>
@@ -323,14 +333,16 @@ export default function ListingsPage() {
           </div>
 
           {/* Type */}
-          <div className="flex rounded-lg bg-zinc-900 p-1">
+          <div className="flex rounded-lg bg-white/5 border border-white/10 backdrop-blur p-1
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             {(["all", "rent", "sale"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTypeTab(t)}
-                className={`rounded-md px-3 py-1 text-sm ${
-                  typeTab === t ? "bg-white text-black" : "text-zinc-300 hover:text-white"
-                }`}
+                className={`rounded-md px-3 py-1 text-sm transition-all duration-200 ${
+                  typeTab === t ? "bg-cyan-400 text-black font-semibold shadow-[0_10px_30px_rgba(34,211,238,0.25)]"
+    : "text-zinc-300 hover:text-black hover:bg-cyan-300/80"
+}`}
               >
                 {t === "all" ? "All" : t === "rent" ? "Rent" : "Sale"}
               </button>
@@ -341,7 +353,8 @@ export default function ListingsPage() {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as any)}
-            className="rounded-lg bg-zinc-900 px-3 py-2 text-sm text-white outline-none"
+            className="rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-sm text-white outline-none
+            shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
           >
             <option value="all">All status</option>
             {STATUS_OPTIONS.map((s) => (
@@ -353,7 +366,8 @@ export default function ListingsPage() {
 
           <button
             onClick={load}
-            className="rounded-lg bg-zinc-900 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
+            className="rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800
+            shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
           >
             Refresh
           </button>
@@ -371,7 +385,8 @@ export default function ListingsPage() {
         {loading ? (
           <div className="mt-6 text-sm text-zinc-400">Loading…</div>
         ) : filtered.length === 0 ? (
-          <div className="mt-6 rounded-2xl bg-zinc-900 p-6 text-sm text-zinc-300">
+          <div className="mt-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-6 text-sm text-zinc-300
+          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             No listings here. Try switch view/status filters, or click{" "}
             <span className="font-semibold text-white">+ New</span>.
           </div>
@@ -382,92 +397,128 @@ export default function ListingsPage() {
               const aging = x.aging_days ?? 0;
 
               return (
-                <div key={x.id} className="rounded-2xl bg-zinc-900 p-4 hover:bg-zinc-800 transition">
-                  <a href={`/listings/${x.id}`} className="block">
-                    <PhotoCarousel urls={(x as any)._photoUrls ?? []} />
+  <div
+    key={x.id}
+    className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-4
+    hover:bg-white/10 transition
+    shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+  >
+    {/* ✅ 卡片主体：整张可点去 detail */}
+    <a href={`/listings/${x.id}`} className="block">
+      <PhotoCarousel urls={(x as any)._photoUrls ?? []} />
 
-                    <div className="mt-3 text-lg font-semibold line-clamp-1">{x.condo_name}</div>
-                    <div className="mt-1 text-sm text-zinc-400 line-clamp-1">{x.area ?? "—"}</div>
+      <div className="mt-3 text-lg font-semibold line-clamp-1">{x.condo_name}</div>
+      <div className="mt-1 text-sm text-zinc-400 line-clamp-1">{x.area ?? "—"}</div>
 
-                    {/* Furnish */}
-                    {x.furnish ? (
-                      <div className="mt-2">
-                        <span className="inline-flex rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-200">
-                          {x.furnish}
-                        </span>
-                      </div>
-                    ) : null}
+      {/* Furnish */}
+      {x.furnish ? (
+        <div className="mt-2">
+          <span className="inline-flex rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-200">
+            {x.furnish}
+          </span>
+        </div>
+      ) : null}
 
-                    {/* Price */}
-                    <div className="mt-3 text-base font-semibold text-white">
-                      {x.price != null ? rm(x.price) : "—"}
-                      <span className="ml-2 text-xs font-normal text-zinc-400">
-                        {x.type === "rent" ? "/ mo" : ""}
-                      </span>
-                    </div>
+      {/* Price */}
+      <div className="mt-3 text-base font-semibold text-white">
+        {x.price != null ? rm(x.price) : "—"}
+        <span className="ml-2 text-xs font-normal text-zinc-400">
+          {x.type === "rent" ? "/ mo" : ""}
+        </span>
+      </div>
 
-                    {/* Specs */}
-                    <div className="mt-1 text-sm text-zinc-300">
-                      {x.sqft ? `${x.sqft} sqft` : "—"} • {x.bedrooms ?? "—"}R •{" "}
-                      {x.bathrooms ?? "—"}B • {x.carparks ?? "—"}CP
-                    </div>
+      {/* Specs */}
+      <div className="mt-1 text-sm text-zinc-300">
+        {x.sqft ? `${x.sqft} sqft` : "—"} • {x.bedrooms ?? "—"}R • {x.bathrooms ?? "—"}B •{" "}
+        {x.carparks ?? "—"}CP
+      </div>
 
-                    {/* ✅ 工作信息：状态/优先级/aging/next follow-up */}
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <span className={`rounded-md px-2 py-1 text-xs ${statusPillClass(x.status)}`}>
-                        {x.type.toUpperCase()} • {x.status}
-                      </span>
+      {/* ✅ 工作信息：状态 / 优先级 / aging / follow-up */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {/* 状态 */}
+        <span
+          className={`rounded-md px-2 py-1 text-xs font-semibold
+          shadow-[0_0_12px_rgba(34,211,238,0.25)]
+          ${statusPillClass(x.status)}`}
+        >
+          {x.type.toUpperCase()} • {x.status}
+        </span>
 
-                      <span className="rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-200">
-                        P{x.priority ?? 2}
-                      </span>
+        {/* Priority */}
+        <span
+          className="rounded-md px-2 py-1 text-xs font-semibold
+          bg-white/5 text-cyan-200 border border-cyan-400/30
+          shadow-[0_0_10px_rgba(34,211,238,0.25)]"
+        >
+          P{x.priority ?? 2}
+        </span>
 
-                      <span
-                        className={`rounded-md px-2 py-1 text-xs ${
-                          aging >= 7 ? "bg-red-900/40 text-red-200" : "bg-zinc-800 text-zinc-200"
-                        }`}
-                      >
-                        Aging {aging}d
-                      </span>
+        {/* Aging */}
+        <span
+          className={`rounded-md px-2 py-1 text-xs font-semibold ${
+            aging >= 7
+              ? "bg-red-900/40 text-red-200 border border-red-500/40 shadow-[0_0_12px_rgba(239,68,68,0.4)]"
+              : "bg-zinc-900 text-zinc-200 border border-white/10"
+          }`}
+        >
+          Aging {aging}d
+        </span>
 
-                      {x.next_follow_up ? (
-                        <span
-                          className={`rounded-md px-2 py-1 text-xs ${
-                            due ? "bg-amber-900/40 text-amber-200" : "bg-zinc-800 text-zinc-200"
-                          }`}
-                        >
-                          FU {formatDateOnly(x.next_follow_up)}
-                        </span>
-                      ) : null}
-                    </div>
+        {/* Follow up */}
+        {x.next_follow_up ? (
+          <span
+            className={`rounded-md px-2 py-1 text-xs font-semibold ${
+              due
+                ? "bg-amber-900/40 text-amber-200 border border-amber-400/40 shadow-[0_0_12px_rgba(251,191,36,0.45)]"
+                : "bg-zinc-900 text-zinc-200 border border-white/10"
+            }`}
+          >
+            FU {formatDateOnly(x.next_follow_up)}
+          </span>
+        ) : null}
+      </div>
 
-                    <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
-                      <span>Last update: {formatDT(x.last_update)}</span>
-                      <span>{new Date(x.updated_at).toLocaleString()}</span>
-                    </div>
-                  </a>
+      {/* 时间 */}
+      <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
+        <span>Last update: {formatDT(x.last_update)}</span>
+        <span>{new Date(x.updated_at).toLocaleString()}</span>
+      </div>
+    </a>
 
-                  {/* ✅ Inbox 快捷按钮：Mark as processed */}
-                  {x.inbox ? (
-                    <div className="mt-3 flex gap-2">
-                      <button
-                        onClick={() => markProcessed(x.id)}
-                        disabled={busyId === x.id}
-                        className="w-full rounded-lg bg-white px-3 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-60"
-                      >
-                        {busyId === x.id ? "Processing…" : "Mark as processed"}
-                      </button>
+    {/* ✅ Inbox 快捷操作区：必须在 a 外面，避免 a 套 a */}
+    {x.inbox ? (
+      <div className="mt-4 flex gap-2">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            markProcessed(x.id);
+          }}
+          disabled={busyId === x.id}
+          className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-black
+          bg-cyan-400 hover:bg-cyan-300
+          shadow-[0_0_20px_rgba(34,211,238,0.55)]
+          transition-all duration-150
+          active:scale-[0.96]
+          disabled:opacity-40 disabled:shadow-none"
+        >
+          {busyId === x.id ? "Processing…" : "Mark as processed"}
+        </button>
 
-                      <a
-                        href={`/listings/${x.id}`}
-                        className="rounded-lg bg-zinc-800 px-3 py-2 text-sm text-white hover:bg-zinc-700"
-                      >
-                        Open
-                      </a>
-                    </div>
-                  ) : null}
-                </div>
-              );
+        <a
+          href={`/listings/${x.id}`}
+          className="rounded-lg px-3 py-2 text-sm font-medium
+          bg-white/5 text-white border border-white/10
+          hover:bg-white/10 hover:border-cyan-400/40
+          hover:shadow-[0_0_12px_rgba(34,211,238,0.25)]
+          transition-all"
+        >
+          Open
+        </a>
+      </div>
+    ) : null}
+  </div>
+);
             })}
           </div>
         )}
