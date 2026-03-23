@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 
-export function PhotoCarousel({ urls }: { urls: string[] }) {
+export default function PhotoCarousel({ urls }: { urls: string[] }) {
   const list = useMemo(() => (urls ?? []).filter(Boolean), [urls]);
   const [i, setI] = useState(0);
 
@@ -96,6 +96,3 @@ export function PhotoCarousel({ urls }: { urls: string[] }) {
     </div>
   );
 }
-
-// ✅ 兼容 default import（可选，但强烈建议留着）
-export default PhotoCarousel;
