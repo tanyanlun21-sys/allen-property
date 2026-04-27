@@ -202,19 +202,20 @@ export default function ListingDetailPage() {
 
     const { data: d, error: dErr } = await supabase
       .from("deals")
-      .select("gross,commission_rate,deductions,notes,commission_amount,net")
+      .select("gross,commission_rate,tenancy,deductions,notes,commission_amount,net")
       .eq("listing_id", id)
       .maybeSingle();
 
     if (dErr) {
       setErr(dErr.message);
-      setDeal({ gross: 0, commission_rate: 0, deductions: 0, notes: "" });
+      setDeal({ gross: 0, commission_rate: 0, tenancy: 0, deductions: 0, notes: "" });
     } else if (!d) {
-      setDeal({ gross: 0, commission_rate: 0, deductions: 0, notes: "" });
+      setDeal({ gross: 0, commission_rate: 0, tenancy: 0,deductions: 0, notes: "" });
     } else {
       setDeal({
         gross: safeNum(d.gross),
         commission_rate: clampPercent(d.commission_rate),
+        tenancy: safeNum(d.tenancy),
         deductions: safeNum(d.deductions),
         notes: d.notes ?? "",
         commission_amount: safeNum(d.commission_amount),
