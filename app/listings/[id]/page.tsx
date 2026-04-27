@@ -8,7 +8,8 @@ import { rm } from "@/lib/money";
 
 type Deal = {
   gross: number;
-  commission_rate: number; // %
+  commission_rate: number;
+  tenancy: number; // ✅ 新增
   deductions: number;
   notes: string | null;
 
@@ -134,11 +135,12 @@ export default function ListingDetailPage() {
   const [viewerIndex, setViewerIndex] = useState(0);
 
   const [deal, setDeal] = useState<Deal>({
-    gross: 0,
-    commission_rate: 0,
-    deductions: 0,
-    notes: "",
-  });
+  gross: 0,
+  commission_rate: 0,
+  tenancy: 0, // ✅ 新增
+  deductions: 0,
+  notes: "",
+});
 
   const [loading, setLoading] = useState(true);
   const [savingDeal, setSavingDeal] = useState(false);
@@ -155,8 +157,11 @@ export default function ListingDetailPage() {
   }, [deal.gross, deal.commission_rate]);
 
   const localNet = useMemo(() => {
-    return Math.max(0, localCommissionAmount - safeNum(deal.deductions));
-  }, [localCommissionAmount, deal.deductions]);
+  return Math.max(
+    0,
+    localCommissionAmount + safeNum(deal.tenancy) - safeNum(deal.deductions)
+  );
+}, [localCommissionAmount, deal.tenancy, deal.deductions]);
 
   const tenantText = useMemo(() => {
     if (!item) return "";
@@ -386,6 +391,7 @@ export default function ListingDetailPage() {
         user_id: userId,
         gross: safeNum(deal.gross),
         commission_rate: clampPercent(deal.commission_rate),
+        tenancy: safeNum(deal.tenancy),
         deductions: safeNum(deal.deductions),
         notes: deal.notes?.trim() ? deal.notes : null,
       },
@@ -804,6 +810,16 @@ disabled:opacity-40 disabled:shadow-none"
                 />
               </div>
 
+<div>
+  <div className="text-xs text-zinc-400 mb-1">Tenancy (RM)</div>
+  <input
+    type="number"
+    className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+    value={deal.tenancy === 0 ? "" : String(deal.tenancy)}
+    onChange={(e) => setDeal((d) => ({ ...d, tenancy: safeNum(e.target.value) }))}
+  />
+</div>
+
               <div>
                 <div className="text-xs text-zinc-400 mb-1">Deductions (RM)</div>
                 <input
@@ -820,6 +836,10 @@ disabled:opacity-40 disabled:shadow-none"
                 <span className="text-zinc-300">Commission (RM):</span>
                 <span className="font-semibold text-white">{rm(localCommissionAmount)}</span>
               </div>
+              <div className="flex items-center justify-between">
+  <span className="text-zinc-300">Tenancy Fee:</span>
+  <span className="font-semibold text-white">{rm(deal.tenancy)}</span>
+</div>
               <div className="flex items-center justify-between">
                 <span className="text-zinc-300">Net:</span>
                 <span className="font-semibold text-white">{rm(localNet)}</span>
