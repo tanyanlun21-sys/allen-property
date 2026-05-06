@@ -8,7 +8,7 @@ import { rm } from "@/lib/money";
 type Deal = {
   gross: number;
   commission_rate: number;
-  tenancy: number; // �?新增
+  tenancy: number; // �?新增
   deductions: number;
   notes: string | null;
 
@@ -27,7 +27,7 @@ function clampPercent(v: any) {
 }
 
 /**
- * �?Smart availability label
+ * �?Smart availability label
  * - if no date OR date <= today => "Ready move in"
  * - else => "Available early/mid/end Feb"
  */
@@ -55,7 +55,7 @@ function isStudioBedrooms(value: any) {
   return value === 0 || value === "0" || String(value ?? "").toLowerCase() === "studio";
 }
 
-/** �?租客模板 */
+/** �?租客模板 */
 function buildTenantText(item: any) {
   const condo = (item?.condo_name ?? "").trim() || "-";
   const sqft = item?.sqft ? `${item.sqft} sqft` : null;
@@ -165,7 +165,7 @@ export default function ListingDetailPage() {
   const [deal, setDeal] = useState<Deal>({
   gross: 0,
   commission_rate: 0,
-  tenancy: 0, // �?新增
+  tenancy: 0, // �?新增
   deductions: 0,
   notes: "",
 });
@@ -307,7 +307,7 @@ export default function ListingDetailPage() {
       return;
     }
 
-    const ok = confirm(`确定要删除选中�?${selectedPhotoIds.size} 张照片吗？不能撤回。`);
+    const ok = confirm(`确定要删除选中�?${selectedPhotoIds.size} 张照片吗？不能撤回。`);
     if (!ok) return;
 
     setDeletingPhotos(true);
@@ -397,7 +397,7 @@ export default function ListingDetailPage() {
       owner_whatsapp: infoDraft?.owner_whatsapp?.trim() ? infoDraft.owner_whatsapp.trim() : null,
       raw_text: infoDraft?.raw_text?.trim() ? infoDraft.raw_text.trim() : null,
 
-      // �?Step 3：任何保存都刷新 last_update
+      // �?Step 3：任何保存都刷新 last_update
       last_update: new Date().toISOString(),
     };
 
@@ -464,7 +464,7 @@ export default function ListingDetailPage() {
   return (
     <main className="min-h-screen text-white bg-[#06070A] bg-[radial-gradient(800px_circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(600px_circle_at_80%_30%,rgba(59,130,246,0.10),transparent_40%),radial-gradient(900px_circle_at_50%_90%,rgba(168,85,247,0.08),transparent_45%)]">
       <div className="mx-auto max-w-3xl px-4 py-6">
-        {/* 下面内容保持你原样（我没�?UI 结构�?*/}
+        {/* 下面内容保持你原样（我没�?UI 结构�?*/}
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xl font-semibold">{item.condo_name}</div>
@@ -598,13 +598,13 @@ export default function ListingDetailPage() {
           </div>
         </div>
 
-          {/* �?�?�?租客模板�?*/}
+          {/* �?�?�?租客模板�?*/}
           <div className="mt-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-base font-semibold text-white">Tenant template</div>
                 <div className="text-xs text-zinc-400 mt-1">
-                  一键复�?/ 一�?WhatsApp（直接贴给租客）
+                  一键复�?/ 一�?WhatsApp（直接贴给租客）
                 </div>
               </div>
 
@@ -926,7 +926,7 @@ export default function ListingDetailPage() {
             href="/dashboard"
             className="inline-block rounded-lg bg-white/5 border border-white/10 backdrop-blur px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
           >
-            View dashboard �?
+            View dashboard �?
           </a>
 
           <a
@@ -938,7 +938,7 @@ export default function ListingDetailPage() {
         </div>
       </div>
 
-      {/* �?Viewer modal：hover 才显�?close + 动效 */}
+      {/* �?Viewer modal：hover 才显�?close + 动效 */}
       {viewerOpen && photoUrls.length > 0 && (
         <div
           className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
@@ -961,7 +961,7 @@ export default function ListingDetailPage() {
               className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-y-1 group-hover:translate-y-0 rounded-full bg-black/60 px-3 py-2 text-white hover:bg-black/80"
               title="Close"
             >
-              �?
+              �?
             </button>
 
             {photoUrls.length > 1 && (
@@ -973,14 +973,14 @@ export default function ListingDetailPage() {
                   }
                   className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-white hover:bg-black/70"
                 >
-                  �?
+                  �?
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewerIndex((i) => (i + 1) % photoUrls.length)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-white hover:bg-black/70"
                 >
-                  �?
+                  �?
                 </button>
               </>
             )}
@@ -988,7 +988,7 @@ export default function ListingDetailPage() {
         </div>
       )}
 
-      {/* �?Manage modal：勾选要删的照片 */}
+      {/* �?Manage modal：勾选要删的照片 */}
       {manageOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center"
