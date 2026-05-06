@@ -46,6 +46,17 @@ export default function TopNav() {
             );
           })}
         </nav>
+
+        <button
+          onClick={async () => {
+            const { supabase } = await import("@/lib/supabase");
+            await supabase.auth.signOut();
+            window.location.href = "/";
+          }}
+          className="rounded-lg bg-zinc-900 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800 transition"
+        >
+          Logout
+        </button>
       </div>
     </header>
   );

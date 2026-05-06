@@ -747,9 +747,9 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
               <div className="col-span-2">
                 <div className="text-xs text-zinc-400 mb-1">Remark</div>
                 {editingInfo ? (
-                  <textarea className="w-full min-h-28 rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.raw_text ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, raw_text: e.target.value }))} placeholder="remark..." />
+                  <textarea className="w-full min-h-28 rounded-lg bg-zinc-700 border border-white/20 px-3 py-2 text-sm outline-none" value={infoDraft?.raw_text ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, raw_text: e.target.value }))} placeholder="remark..." />
                 ) : (
-                  <div className="whitespace-pre-wrap text-zinc-200">{item.raw_text ?? "-"}</div>
+                  <div className="whitespace-pre-wrap text-zinc-200 rounded-lg bg-zinc-700 border border-white/20 px-3 py-2 min-h-28">{item.raw_text ?? "-"}</div>
                 )}
               </div>
             </div>
@@ -768,7 +768,7 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <div className="text-xs text-zinc-400 mb-1">Gross (RM)</div>
                 <input
@@ -790,24 +790,26 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
                   }
                 />
               </div>
+            </div>
 
-<div>
-  <div className="text-xs text-zinc-400 mb-1">Tenancy (RM)</div>
-  <input
-    type="number"
-    className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
-    value={deal.tenancy === 0 ? "" : String(deal.tenancy)}
-    onChange={(e) => setDeal((d) => ({ ...d, tenancy: safeNum(e.target.value) }))}
-  />
-</div>
-
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <div className="text-xs text-zinc-400 mb-1">Deductions (RM)</div>
                 <input
                   type="number"
-                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+                  className="w-full rounded-lg bg-zinc-900/70 px-3 py-2 text-sm text-zinc-400 outline-none"
                   value={deal.deductions === 0 ? "" : String(deal.deductions)}
                   onChange={(e) => setDeal((d) => ({ ...d, deductions: safeNum(e.target.value) }))}
+                />
+              </div>
+
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Tenancy (RM)</div>
+                <input
+                  type="number"
+                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+                  value={deal.tenancy === 0 ? "" : String(deal.tenancy)}
+                  onChange={(e) => setDeal((d) => ({ ...d, tenancy: safeNum(e.target.value) }))}
                 />
               </div>
             </div>

@@ -277,24 +277,12 @@ export default function ListingsPage() {
             <div className="text-sm text-zinc-400">Your work queue (not just a list).</div>
           </div>
 
-          <div className="flex gap-2">
-            <a
+          <a
   href="/listings/new"
-  className="rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-sm text-white hover:bg-white/10"
+  className="rounded-lg bg-cyan-400 border border-cyan-300 px-4 py-2 text-sm text-black font-semibold hover:bg-cyan-300 hover:border-cyan-200 shadow-[0_10px_30px_rgba(34,211,238,0.35)] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)] transition-all duration-150"
 >
   + New
 </a>
-
-            <button
-              onClick={async () => {
-                await supabase.auth.signOut();
-                window.location.href = "/";
-              }}
-              className="rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-sm hover:bg-white/10"
-            >
-              Logout
-            </button>
-          </div>
         </div>
 
         {/* ✅ 工作视图（Inbox/Active/All） */}
