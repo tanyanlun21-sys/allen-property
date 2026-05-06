@@ -10,6 +10,7 @@ type DealRow = {
   listing_id: string;
   gross: number | null;
   commission_rate: number | null; // %
+  tenancy: number | null;
   deductions: number | null;
   notes: string | null;
   updated_at: string;
@@ -32,8 +33,8 @@ function clampPercent(v: any) {
 function commissionAmount(gross: any, rate: any) {
   return (safeNum(gross) * clampPercent(rate)) / 100;
 }
-function netAmount(gross: any, rate: any, deductions: any) {
-  return Math.max(0, commissionAmount(gross, rate) - safeNum(deductions));
+function netAmount(gross: any, rate: any, tenancy: any, deductions: any) {
+  return Math.max(0, commissionAmount(gross, rate) + safeNum(tenancy) - safeNum(deductions));
 }
 
 function pad2(n: number) {
@@ -132,7 +133,7 @@ export default function IncomePage() {
     // ✅ 拉 deals（按 updated_at）
     const { data: d, error: dErr } = await supabase
       .from("deals")
-      .select("listing_id,gross,commission_rate,deductions,notes,updated_at")
+      .select("listing_id,gross,commission_rate,tenancy,deductions,notes,updated_at")
       .eq("user_id", userId)
       .gte("updated_at", fromISO)
       .lt("updated_at", toISO)
@@ -184,7 +185,26 @@ export default function IncomePage() {
 
   const totalNet = useMemo(() => {
     return deals.reduce(
-      (sum, x) => sum + netAmount(x.gross, x.commission_rate, x.deductions),
+      (sum, x) => sum + netAmount(x.gross, x.commission_rate, x.tenancy, x.deductions),
+      0
+    );
+  }, [deals]);
+
+  const totalComm = useMemo(() => {
+    return deals.reduce((sum, x) => sum + commissionAmount(x.gross, x.commission_rate), 0);
+  }, [deals]);
+
+  const totalDeductions = useMemo(() => {
+    return deals.reduce((sum, x) => sum + safeNum(x.deductions), 0);
+  }, [deals]);
+
+  const totalTenancy = useMemo(() => {
+    return deals.reduce((sum, x) => sum + safeNum(x.tenancy), 0);
+  }, [deals]);
+
+  const totalIncome = useMemo(() => {
+    return deals.reduce(
+      (sum, x) => sum + commissionAmount(x.gross, x.commission_rate) + safeNum(x.tenancy) - safeNum(x.deductions),
       0
     );
   }, [deals]);
@@ -327,63 +347,95 @@ export default function IncomePage() {
             No deals in selected period.
           </div>
         ) : (
-          <div className={`mt-6 ${CARD} p-4 overflow-x-auto`}>
-            <table className="w-full text-sm">
-              <thead className="text-xs uppercase tracking-wider text-[#FFD36A]/90 bg-[#0E0E0E] border-b border-[#D4AF37]/20">
-                <tr className="text-left">
-                  <th className="py-2 pr-4">Updated</th>
-                  <th className="py-2 pr-4">Type</th>
-                  <th className="py-2 pr-4">Listing</th>
-                  <th className="py-2 pr-4">Gross</th>
-                  <th className="py-2 pr-4">%</th>
-                  <th className="py-2 pr-4">Comm (RM)</th>
-                  <th className="py-2 pr-4">Deductions</th>
-                  <th className="py-2 pr-0">Net</th>
-                </tr>
-              </thead>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+              <div className="bg-[#0E0E0E] border border-[#D4AF37]/25 rounded-lg p-4">
+                <div className="text-sm text-zinc-400">Total Comm</div>
+                <div className="text-2xl font-bold text-[#FFF2C2]">{rm(totalComm)}</div>
+              </div>
 
-              <tbody>
-                {deals.map((x, idx) => {
-                  const l = listingMap.get(x.listing_id);
-                  const comm = commissionAmount(x.gross, x.commission_rate);
-                  const net = netAmount(x.gross, x.commission_rate, x.deductions);
+              <div className="bg-[#0E0E0E] border border-[#D4AF37]/25 rounded-lg p-4">
+                <div className="text-sm text-zinc-400">Total Deductions</div>
+                <div className="text-2xl font-bold text-red-400">{rm(totalDeductions)}</div>
+              </div>
 
-                  return (
-                    <tr
-                      key={`${x.listing_id}-${idx}-${x.updated_at}`}
-                      className="border-b border-white/5 hover:bg-[#D4AF37]/5 transition"
-                    >
-                      <td className="py-3 pr-4 text-zinc-400">
-                        {new Date(x.updated_at).toLocaleString()}
-                      </td>
+              <div className="bg-[#0E0E0E] border border-[#D4AF37]/25 rounded-lg p-4">
+                <div className="text-sm text-zinc-400">Total Tenancy</div>
+                <div className="text-2xl font-bold text-[#FFF2C2]">{rm(totalTenancy)}</div>
+              </div>
 
-                      <td className="py-3 pr-4">
-                        <span className="rounded-md bg-[#0E0E0E] border border-[#D4AF37]/25 px-2 py-1 text-xs text-[#FFF2C2]">
-                          {l?.type?.toUpperCase() ?? "—"}
-                        </span>
-                      </td>
+              <div className="bg-gradient-to-r from-[#FFD36A]/20 to-[#D4AF37]/20 border border-[#FFD36A]/50 rounded-lg p-4">
+                <div className="text-sm text-zinc-400">Total Income</div>
+                <div className="text-3xl font-extrabold text-[#FFD36A]">{rm(totalIncome)}</div>
+              </div>
+            </div>
 
-                      <td className="py-3 pr-4">{l?.condo_name ?? x.listing_id}</td>
+            <div className={`mt-6 ${CARD} p-4 overflow-x-auto`}>
+              <table className="w-full text-sm">
+                <thead className="text-xs uppercase tracking-wider text-[#FFD36A]/90 bg-[#0E0E0E] border-b border-[#D4AF37]/20">
+                  <tr className="text-left">
+                    <th className="py-2 pr-4">Updated</th>
+                    <th className="py-2 pr-4">Type</th>
+                    <th className="py-2 pr-4">Listing</th>
+                    <th className="py-2 pr-4">Gross</th>
+                    <th className="py-2 pr-4">%</th>
+                    <th className="py-2 pr-4">Comm (RM)</th>
+                    <th className="py-2 pr-4">Tenancy</th>
+                    <th className="py-2 pr-4">Deductions</th>
+                    <th className="py-2 pr-4">Notes</th>
+                    <th className="py-2 pr-0">Net</th>
+                  </tr>
+                </thead>
 
-                      <td className="py-3 pr-4 text-[#FFF2C2] font-semibold">
-                        {rm(safeNum(x.gross))}
-                      </td>
+                <tbody>
+                  {deals.map((x, idx) => {
+                    const l = listingMap.get(x.listing_id);
+                    const comm = commissionAmount(x.gross, x.commission_rate);
+                    const net = netAmount(x.gross, x.commission_rate, x.tenancy, x.deductions);
 
-                      <td className="py-3 pr-4">{clampPercent(x.commission_rate)}%</td>
+                    return (
+                      <tr
+                        key={`${x.listing_id}-${idx}-${x.updated_at}`}
+                        className="border-b border-white/5 hover:bg-[#D4AF37]/5 transition"
+                      >
+                        <td className="py-3 pr-4 text-zinc-400">
+                          {new Date(x.updated_at).toLocaleString()}
+                        </td>
 
-                      <td className="py-3 pr-4 text-[#FFF2C2] font-semibold">{rm(comm)}</td>
+                        <td className="py-3 pr-4">
+                          <span className="rounded-md bg-[#0E0E0E] border border-[#D4AF37]/25 px-2 py-1 text-xs text-[#FFF2C2]">
+                            {l?.type?.toUpperCase() ?? "—"}
+                          </span>
+                        </td>
 
-                      <td className="py-3 pr-4">{rm(safeNum(x.deductions))}</td>
+                        <td className="py-3 pr-4">{l?.condo_name ?? x.listing_id}</td>
 
-                      <td className="py-3 pr-0 font-extrabold text-[#FFD36A]">
-                        {rm(net)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        <td className="py-3 pr-4 text-[#FFF2C2] font-semibold">
+                          {rm(safeNum(x.gross))}
+                        </td>
+
+                        <td className="py-3 pr-4">{clampPercent(x.commission_rate)}%</td>
+
+                        <td className="py-3 pr-4 text-[#FFF2C2] font-semibold">{rm(comm)}</td>
+
+                        <td className="py-3 pr-4">{rm(safeNum(x.tenancy))}</td>
+
+                        <td className="py-3 pr-4">{rm(safeNum(x.deductions))}</td>
+
+<td className="py-3 pr-4 text-zinc-300 text-sm min-w-48 whitespace-pre-wrap break-words">
+                          {x.notes || "—"}
+                        </td>
+
+                        <td className="py-3 pr-0 font-extrabold text-[#FFD36A]">
+                          {rm(net)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </main>

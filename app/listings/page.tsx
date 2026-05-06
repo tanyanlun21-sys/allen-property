@@ -7,7 +7,6 @@ import { rm } from "@/lib/money";
 
 type ListingType = "rent" | "sale";
 
-// ✅ 跟你 DB 统一后的状态（Title Case）
 type ListingStatus =
   | "New"
   | "Available"
@@ -17,7 +16,6 @@ type ListingStatus =
   | "Booked"
   | "Closed"
   | "Inactive"
-  // 兼容你旧 UI / 旧数据（如果还有）
   | "Pending";
 
 type Furnish = "Fully" | "Partial" | null;
@@ -36,17 +34,18 @@ type WorkListing = {
   price: number | null;
   furnish: Furnish;
 
-  // ✅ 基建字段
   inbox: boolean;
   last_update: string | null;
   next_follow_up: string | null;
   priority: number | null;
 
-  // ✅ view 计算字段
   aging_days: number;
 
-  // 你原本用来显示时间（还保留）
   updated_at: string;
+
+  raw_text: string | null;
+
+  owner_whatsapp: string | null;
 
   _photoUrls?: string[];
 };
@@ -63,12 +62,10 @@ const STATUS_OPTIONS: ListingStatus[] = [
   "Booked",
   "Closed",
   "Inactive",
-  // 若你确定不需要 Pending，可以删掉
   "Pending",
 ];
 
 function statusPillClass(s: ListingStatus) {
-  // 只用 tailwind 默认色系（不改你整体主题）
   switch (s) {
     case "New":
       return "bg-zinc-700 text-zinc-100";
@@ -112,24 +109,22 @@ function isDueTodayOrPast(s: string | null | undefined) {
   const d = new Date(s);
   if (Number.isNaN(d.getTime())) return false;
   const now = new Date();
-  // 比到日期即可
-  const a = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const b = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  return b <= a;
+  return b <= today;
 }
 
 export default function ListingsPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [items, setItems] = useState<WorkListing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
 
-  // ✅ 新增：工作视图（Inbox / Active / All）
-  const [viewTab, setViewTab] = useState<ViewTab>("all");
-
+  const [viewTab, setViewTab] = useState<ViewTab>("active");
   const [typeTab, setTypeTab] = useState<"all" | "rent" | "sale">("all");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [statusOpen, setStatusOpen] = useState(false);
-
+  const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -142,20 +137,25 @@ export default function ListingsPage() {
 
   const load = async () => {
     setLoading(true);
+    setErr(null);
 
-    // ✅ 从 view 读（含 aging_days）
     const { data, error } = await supabase
-      .from("listings_work")
+      .from("listings")
       .select(
-        "id,type,status,condo_name,area,sqft,bedrooms,bathrooms,carparks,price,furnish,updated_at,inbox,last_update,next_follow_up,priority,aging_days"
-      );
+        "id,type,status,condo_name,area,sqft,bedrooms,bathrooms,carparks,price,furnish,updated_at,inbox,last_update,next_follow_up,priority,raw_text,owner_whatsapp"
+      )
+      .order("updated_at", { ascending: false });
 
-    if (error || !data) {
+    if (error) {
+      setErr(error.message);
+      setItems([]);
       setLoading(false);
       return;
     }
 
-    const rows = data as any[];
+    console.log("Loaded listings data length:", data?.length);
+
+    const rows = (data ?? []) as any[];
     const ids = rows.map((x) => x.id);
     if (ids.length === 0) {
       setItems([]);
@@ -181,6 +181,7 @@ export default function ListingsPage() {
 
     const enriched = rows.map((x) => ({
       ...x,
+      aging_days: Math.floor((new Date().getTime() - new Date(x.updated_at).getTime()) / (1000 * 60 * 60 * 24)),
       _photoUrls: (photoMap.get(x.id) ?? []).map(toUrl),
     }));
 
@@ -191,7 +192,6 @@ export default function ListingsPage() {
   useEffect(() => {
     if (!userId) return;
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const counts = useMemo(() => {
@@ -203,89 +203,256 @@ export default function ListingsPage() {
   const filtered = useMemo(() => {
     const base = items.filter((x) => {
       const okView =
-        viewTab === "all" ? true : viewTab === "inbox" ? x.inbox === true : x.inbox === false;
+        viewTab === "all"
+          ? true
+          : viewTab === "inbox"
+          ? x.inbox === true
+          : !["Closed", "Inactive"].includes(x.status);
 
       const okType = typeTab === "all" ? true : x.type === typeTab;
       const okStatus = status === "all" ? true : x.status === status;
 
-      return okView && okType && okStatus;
+      const searchLower = search.toLowerCase().trim();
+      const okSearch = searchLower === "" || [
+        x.condo_name,
+        x.area,
+        x.owner_whatsapp,
+        x.raw_text
+      ].filter(Boolean).some(field => field?.toLowerCase().includes(searchLower));
+
+      return okView && okType && okStatus && okSearch;
     });
 
-    // ✅ 工作队列排序（越像“该做什么”越靠前）
-    // 1) inbox 先
-    // 2) follow-up 到期/越早 越前
-    // 3) priority 越小越高（1=最高）
-    // 4) aging_days 越大越前（越久没动越需要处理）
-    const sorted = [...base].sort((a, b) => {
-      // inbox first
-      if (a.inbox !== b.inbox) return a.inbox ? -1 : 1;
+    const followUps = base.filter(x => x.status === "Follow-up");
+    const rents = base.filter(x => x.type === "rent" && x.status !== "Follow-up");
+    const sales = base.filter(x => x.type === "sale" && x.status !== "Follow-up");
 
-      const aDue = a.next_follow_up ? new Date(a.next_follow_up).getTime() : Number.POSITIVE_INFINITY;
-      const bDue = b.next_follow_up ? new Date(b.next_follow_up).getTime() : Number.POSITIVE_INFINITY;
-      if (aDue !== bDue) return aDue - bDue;
+    const sortByTime = (arr: WorkListing[]) => arr.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
-      const ap = a.priority ?? 2;
-      const bp = b.priority ?? 2;
-      if (ap !== bp) return ap - bp;
-
-      const aa = a.aging_days ?? 0;
-      const ba = b.aging_days ?? 0;
-      if (aa !== ba) return ba - aa;
-
-      // fallback: last_update desc
-      const al = a.last_update ? new Date(a.last_update).getTime() : 0;
-      const bl = b.last_update ? new Date(b.last_update).getTime() : 0;
-      return bl - al;
-    });
-
-    return sorted;
-  }, [items, viewTab, typeTab, status]);
+    return [...sortByTime(followUps), ...sortByTime(rents), ...sortByTime(sales)];
+  }, [items, viewTab, typeTab, status, search]);
 
   const markProcessed = async (id: string) => {
-  setBusyId(id);
+    setBusyId(id);
 
-  // 乐观更新：立刻从 inbox 移走
-  setItems((prev) => prev.map((x) => (x.id === id ? { ...x, inbox: false } : x)));
+    setItems((prev) => prev.map((x) => (x.id === id ? { ...x, inbox: false } : x)));
 
-  const { error } = await supabase
-    .from("listings")
-    .update({
-      inbox: false,
-      last_update: new Date().toISOString(), // ✅ Step 3/5：任何动作都算“更新”
-    })
-    .eq("id", id);
+    const { error } = await supabase
+      .from("listings")
+      .update({
+        inbox: false,
+        last_update: new Date().toISOString(),
+      })
+      .eq("id", id);
 
-  if (error) {
-    // rollback
-    setItems((prev) => prev.map((x) => (x.id === id ? { ...x, inbox: true } : x)));
-  } else {
-    await load(); // reload 保证 view/aging 正确
-  }
+    if (error) {
+      setItems((prev) => prev.map((x) => (x.id === id ? { ...x, inbox: true } : x)));
+    } else {
+      await load();
+    }
 
-  setBusyId(null);
-};
+    setBusyId(null);
+  };
+
+  const toggleAdvertised = async (id: string) => {
+    setBusyId(id);
+
+    const item = items.find(x => x.id === id);
+    if (!item) return;
+
+    const currentRemark = item.raw_text || "";
+    const isAdvertised = currentRemark.includes("[ADVERTISED]");
+    const newRemark = isAdvertised
+      ? currentRemark.replace("[ADVERTISED]", "").trim()
+      : `[ADVERTISED] ${currentRemark}`.trim();
+
+    const { error } = await supabase
+      .from("listings")
+      .update({ raw_text: newRemark })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Toggle advertised error:", error);
+    } else {
+      setItems(prev => prev.map(x => x.id === id ? { ...x, raw_text: newRemark } : x));
+    }
+
+    setBusyId(null);
+  };
+
+  const renderCard = (x: WorkListing) => {
+    const due = x.next_follow_up ? isDueTodayOrPast(x.next_follow_up) : false;
+    const aging = x.aging_days ?? 0;
+    const isAdvertised = (x.raw_text || "").includes("[ADVERTISED]");
+
+    return (
+      <div
+        key={x.id}
+        className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-4
+        hover:bg-white/10 transition
+        shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+      >
+        <a href={`/listings/${x.id}`} className="block">
+          <PhotoCarousel urls={(x as any)._photoUrls ?? []} />
+
+          <div className="mt-3 text-lg font-semibold line-clamp-1">{x.condo_name}</div>
+          <div className="mt-1 text-sm text-zinc-400 line-clamp-1">{x.area ?? "—"}</div>
+
+          {x.furnish ? (
+            <div className="mt-2">
+              <span className="inline-flex rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-200">
+                {x.furnish}
+              </span>
+            </div>
+          ) : null}
+
+          <div className="mt-3 text-base font-semibold text-white">
+            {x.price != null ? rm(x.price) : "—"}
+            <span className="ml-2 text-xs font-normal text-zinc-400">
+              {x.type === "rent" ? "/ mo" : ""}
+            </span>
+          </div>
+
+          <div className="mt-1 text-sm text-zinc-300">
+            {x.sqft ? `${x.sqft} sqft` : "—"} • {x.bedrooms ?? "—"}R • {x.bathrooms ?? "—"}B •{" "}
+            {x.carparks ?? "—"}CP
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span
+              className={`rounded-md px-2 py-1 text-xs font-semibold
+              shadow-[0_0_12px_rgba(34,211,238,0.25)]
+              ${statusPillClass(x.status)}`}
+            >
+              {x.type.toUpperCase()} • {x.status}
+            </span>
+
+            <span
+              className="rounded-md px-2 py-1 text-xs font-semibold
+              bg-white/5 text-cyan-200 border border-cyan-400/30
+              shadow-[0_0_10px_rgba(34,211,238,0.25)]"
+            >
+              P{x.priority ?? 2}
+            </span>
+
+            <span
+              className={`rounded-md px-2 py-1 text-xs font-semibold ${
+                aging >= 7
+                  ? "bg-red-900/40 text-red-200 border border-red-500/40 shadow-[0_0_12px_rgba(239,68,68,0.4)]"
+                  : "bg-zinc-900 text-zinc-200 border border-white/10"
+              }`}
+            >
+              Aging {aging}d
+            </span>
+
+            {x.next_follow_up ? (
+              <span
+                className={`rounded-md px-2 py-1 text-xs font-semibold ${
+                  due
+                    ? "bg-amber-900/40 text-amber-200 border border-amber-400/40 shadow-[0_0_12px_rgba(251,191,36,0.45)]"
+                    : "bg-zinc-900 text-zinc-200 border border-white/10"
+                }`}
+              >
+                FU {formatDateOnly(x.next_follow_up)}
+              </span>
+            ) : null}
+
+            {isAdvertised && (
+              <span className="rounded-md px-2 py-1 text-xs font-semibold bg-green-900/40 text-green-200 border border-green-400/40">
+                Advertised
+              </span>
+            )}
+          </div>
+
+          <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
+            <span>Last update: {formatDT(x.last_update)}</span>
+            <span>{new Date(x.updated_at).toLocaleString()}</span>
+          </div>
+        </a>
+
+        {x.inbox ? (
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                markProcessed(x.id);
+              }}
+              disabled={busyId === x.id}
+              className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-black
+              bg-cyan-400 hover:bg-cyan-300
+              shadow-[0_0_20px_rgba(34,211,238,0.55)]
+              transition-all duration-150
+              active:scale-[0.96]
+              disabled:opacity-40 disabled:shadow-none"
+            >
+              {busyId === x.id ? "Processing…" : "Mark as processed"}
+            </button>
+
+            <a
+              href={`/listings/${x.id}`}
+              className="rounded-lg px-3 py-2 text-sm font-medium
+              bg-white/5 text-white border border-white/10
+              hover:bg-white/10 hover:border-cyan-400/40
+              hover:shadow-[0_0_12px_rgba(34,211,238,0.25)]
+              transition-all"
+            >
+              Open
+            </a>
+          </div>
+        ) : (
+          <div className="mt-4">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleAdvertised(x.id);
+              }}
+              disabled={busyId === x.id}
+              className={`w-full rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-150 active:scale-[0.96] disabled:opacity-40 ${
+                isAdvertised
+                  ? "bg-green-600 text-white hover:bg-green-500 shadow-[0_0_20px_rgba(34,197,94,0.55)]"
+                  : "bg-zinc-600 text-white hover:bg-zinc-500"
+              }`}
+            >
+              {busyId === x.id ? "Updating…" : isAdvertised ? "Unmark Advertised" : "Mark Advertised"}
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <main
-  className="min-h-screen text-white bg-[#06070A]
-  bg-[radial-gradient(800px_circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(600px_circle_at_80%_30%,rgba(59,130,246,0.10),transparent_40%),radial-gradient(900px_circle_at_50%_90%,rgba(168,85,247,0.08),transparent_45%)]"
->
+      className="min-h-screen text-white bg-[#06070A]
+      bg-[radial-gradient(800px_circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(600px_circle_at_80%_30%,rgba(59,130,246,0.10),transparent_40%),radial-gradient(900px_circle_at_50%_90%,rgba(168,85,247,0.08),transparent_45%)]"
+    >
       <div className="mx-auto max-w-6xl px-4 py-6">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-xl font-semibold">Listings</div>
+            <div className="text-xl font-semibold">Listings ({filtered.length})</div>
             <div className="text-sm text-zinc-400">Your work queue (not just a list).</div>
           </div>
 
           <a
-  href="/listings/new"
-  className="rounded-lg bg-cyan-400 border border-cyan-300 px-4 py-2 text-sm text-black font-semibold hover:bg-cyan-300 hover:border-cyan-200 shadow-[0_10px_30px_rgba(34,211,238,0.35)] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)] transition-all duration-150"
->
-  + New
-</a>
+            href="/listings/new"
+            className="rounded-lg bg-cyan-400 border border-cyan-300 px-4 py-2 text-sm text-black font-semibold hover:bg-cyan-300 hover:border-cyan-200 shadow-[0_10px_30px_rgba(34,211,238,0.35)] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)] transition-all duration-150"
+          >
+            + New
+          </a>
         </div>
 
-        {/* ✅ 工作视图（Inbox/Active/All） */}
+        <div className="mt-5">
+          <input
+            type="text"
+            placeholder="Search condo name, area, WhatsApp, remark..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-lg bg-white/5 border border-white/10 backdrop-blur px-4 py-3 text-sm text-white placeholder-zinc-400 outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/25 transition"
+          />
+        </div>
+
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <div className="flex rounded-lg bg-white/5 border border-white/10 backdrop-blur p-1
           shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
@@ -300,17 +467,16 @@ export default function ListingsPage() {
                 key={t.key}
                 onClick={() => setViewTab(t.key)}
                 className={`rounded-md px-3 py-1 text-sm transition-all duration-200 ${
-  viewTab === t.key
-    ? "bg-cyan-400 text-black font-semibold shadow-[0_10px_30px_rgba(34,211,238,0.25)]"
-    : "text-zinc-300 hover:text-black hover:bg-cyan-300/80"
-}`}
+                  viewTab === t.key
+                    ? "bg-cyan-400 text-black font-semibold shadow-[0_10px_30px_rgba(34,211,238,0.25)]"
+                    : "text-zinc-300 hover:text-black hover:bg-cyan-300/80"
+                }`}
               >
                 {t.label}
               </button>
             ))}
           </div>
 
-          {/* Type */}
           <div className="flex rounded-lg bg-white/5 border border-white/10 backdrop-blur p-1
           shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             {(["all", "rent", "sale"] as const).map((t) => (
@@ -319,55 +485,53 @@ export default function ListingsPage() {
                 onClick={() => setTypeTab(t)}
                 className={`rounded-md px-3 py-1 text-sm transition-all duration-200 ${
                   typeTab === t ? "bg-cyan-400 text-black font-semibold shadow-[0_10px_30px_rgba(34,211,238,0.25)]"
-    : "text-zinc-300 hover:text-black hover:bg-cyan-300/80"
-}`}
+                    : "text-zinc-300 hover:text-black hover:bg-cyan-300/80"
+                }`}
               >
                 {t === "all" ? "All" : t === "rent" ? "Rent" : "Sale"}
               </button>
             ))}
           </div>
 
-          {/* Status */}
-<div className="relative">
-  <button
-    onClick={() => setStatusOpen(v => !v)}
-    className="flex items-center gap-2 rounded-lg bg-white/5 border border-cyan-400/30 backdrop-blur px-3 py-2 text-sm text-cyan-200
-    shadow-[0_0_18px_rgba(34,211,238,0.25)]
-    hover:bg-white/10 transition"
-  >
-    <span>{status === "all" ? "All status" : status}</span>
-    <span className="text-xs opacity-70">▾</span>
-  </button>
+          <div className="relative">
+            <button
+              onClick={() => setStatusOpen(v => !v)}
+              className="flex items-center gap-2 rounded-lg bg-white/5 border border-cyan-400/30 backdrop-blur px-3 py-2 text-sm text-cyan-200
+              shadow-[0_0_18px_rgba(34,211,238,0.25)]
+              hover:bg-white/10 transition"
+            >
+              <span>{status === "all" ? "All status" : status}</span>
+              <span className="text-xs opacity-70">▾</span>
+            </button>
 
-  {statusOpen && (
-    <div className="absolute z-50 mt-2 min-w-[160px] rounded-xl bg-[#050B14] border border-cyan-400/30 backdrop-blur
-    shadow-[0_0_30px_rgba(34,211,238,0.35)] overflow-hidden">
+            {statusOpen && (
+              <div className="absolute z-50 mt-2 min-w-[160px] rounded-xl bg-[#050B14] border border-cyan-400/30 backdrop-blur
+              shadow-[0_0_30px_rgba(34,211,238,0.35)] overflow-hidden">
+                <div
+                  onClick={() => {
+                    setStatus("all" as any);
+                    setStatusOpen(false);
+                  }}
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-cyan-400/20"
+                >
+                  All status
+                </div>
 
-      <div
-        onClick={() => {
-          setStatus("all" as any);
-          setStatusOpen(false);
-        }}
-        className="px-3 py-2 text-sm cursor-pointer hover:bg-cyan-400/20"
-      >
-        All status
-      </div>
-
-      {STATUS_OPTIONS.map((s) => (
-        <div
-          key={s}
-          onClick={() => {
-            setStatus(s as any);
-            setStatusOpen(false);
-          }}
-          className="px-3 py-2 text-sm cursor-pointer hover:bg-cyan-400/20"
-        >
-          {s}
-        </div>
-      ))}
-    </div>
-  )}
-</div>
+                {STATUS_OPTIONS.map((s) => (
+                  <div
+                    key={s}
+                    onClick={() => {
+                      setStatus(s as any);
+                      setStatusOpen(false);
+                    }}
+                    className="px-3 py-2 text-sm cursor-pointer hover:bg-cyan-400/20"
+                  >
+                    {s}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <button
             onClick={load}
@@ -377,7 +541,6 @@ export default function ListingsPage() {
             Refresh
           </button>
 
-          {/* 小提示：follow-up 到期数量（先提醒你系统开始“催你”） */}
           {counts.dueCount > 0 ? (
             <div className="ml-auto rounded-lg bg-amber-900/30 px-3 py-2 text-xs text-amber-200">
               {counts.dueCount} follow-up due
@@ -396,135 +559,60 @@ export default function ListingsPage() {
             <span className="font-semibold text-white">+ New</span>.
           </div>
         ) : (
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map((x) => {
-              const due = x.next_follow_up ? isDueTodayOrPast(x.next_follow_up) : false;
-              const aging = x.aging_days ?? 0;
-
+          <div className="mt-6 space-y-6">
+            {(() => {
+              const followUps = filtered.filter(x => x.status === "Follow-up");
+              if (followUps.length === 0) return null;
               return (
-  <div
-    key={x.id}
-    className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-4
-    hover:bg-white/10 transition
-    shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
-  >
-    {/* ✅ 卡片主体：整张可点去 detail */}
-    <a href={`/listings/${x.id}`} className="block">
-      <PhotoCarousel urls={(x as any)._photoUrls ?? []} />
+                <div>
+                  <div
+                    className="text-lg font-semibold mb-4"
+                    style={{ color: '#FFD36A', textShadow: '0 0 14px rgba(255,211,106,0.8)' }}
+                  >
+                    Follow-up ({followUps.length})
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {followUps.map((x) => renderCard(x))}
+                  </div>
+                </div>
+              );
+            })()}
 
-      <div className="mt-3 text-lg font-semibold line-clamp-1">{x.condo_name}</div>
-      <div className="mt-1 text-sm text-zinc-400 line-clamp-1">{x.area ?? "—"}</div>
+            {(() => {
+              const rents = filtered.filter(x => x.type === "rent" && x.status !== "Follow-up");
+              if (rents.length === 0) return null;
+              return (
+                <div>
+                  <div
+                    className="text-lg font-semibold mb-4"
+                    style={{ color: '#22C55E', textShadow: '0 0 14px rgba(34,197,94,0.8)' }}
+                  >
+                    Rent ({rents.length})
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {rents.map((x) => renderCard(x))}
+                  </div>
+                </div>
+              );
+            })()}
 
-      {/* Furnish */}
-      {x.furnish ? (
-        <div className="mt-2">
-          <span className="inline-flex rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-200">
-            {x.furnish}
-          </span>
-        </div>
-      ) : null}
-
-      {/* Price */}
-      <div className="mt-3 text-base font-semibold text-white">
-        {x.price != null ? rm(x.price) : "—"}
-        <span className="ml-2 text-xs font-normal text-zinc-400">
-          {x.type === "rent" ? "/ mo" : ""}
-        </span>
-      </div>
-
-      {/* Specs */}
-      <div className="mt-1 text-sm text-zinc-300">
-        {x.sqft ? `${x.sqft} sqft` : "—"} • {x.bedrooms ?? "—"}R • {x.bathrooms ?? "—"}B •{" "}
-        {x.carparks ?? "—"}CP
-      </div>
-
-      {/* ✅ 工作信息：状态 / 优先级 / aging / follow-up */}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        {/* 状态 */}
-        <span
-          className={`rounded-md px-2 py-1 text-xs font-semibold
-          shadow-[0_0_12px_rgba(34,211,238,0.25)]
-          ${statusPillClass(x.status)}`}
-        >
-          {x.type.toUpperCase()} • {x.status}
-        </span>
-
-        {/* Priority */}
-        <span
-          className="rounded-md px-2 py-1 text-xs font-semibold
-          bg-white/5 text-cyan-200 border border-cyan-400/30
-          shadow-[0_0_10px_rgba(34,211,238,0.25)]"
-        >
-          P{x.priority ?? 2}
-        </span>
-
-        {/* Aging */}
-        <span
-          className={`rounded-md px-2 py-1 text-xs font-semibold ${
-            aging >= 7
-              ? "bg-red-900/40 text-red-200 border border-red-500/40 shadow-[0_0_12px_rgba(239,68,68,0.4)]"
-              : "bg-zinc-900 text-zinc-200 border border-white/10"
-          }`}
-        >
-          Aging {aging}d
-        </span>
-
-        {/* Follow up */}
-        {x.next_follow_up ? (
-          <span
-            className={`rounded-md px-2 py-1 text-xs font-semibold ${
-              due
-                ? "bg-amber-900/40 text-amber-200 border border-amber-400/40 shadow-[0_0_12px_rgba(251,191,36,0.45)]"
-                : "bg-zinc-900 text-zinc-200 border border-white/10"
-            }`}
-          >
-            FU {formatDateOnly(x.next_follow_up)}
-          </span>
-        ) : null}
-      </div>
-
-      {/* 时间 */}
-      <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
-        <span>Last update: {formatDT(x.last_update)}</span>
-        <span>{new Date(x.updated_at).toLocaleString()}</span>
-      </div>
-    </a>
-
-    {/* ✅ Inbox 快捷操作区：必须在 a 外面，避免 a 套 a */}
-    {x.inbox ? (
-      <div className="mt-4 flex gap-2">
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            markProcessed(x.id);
-          }}
-          disabled={busyId === x.id}
-          className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-black
-          bg-cyan-400 hover:bg-cyan-300
-          shadow-[0_0_20px_rgba(34,211,238,0.55)]
-          transition-all duration-150
-          active:scale-[0.96]
-          disabled:opacity-40 disabled:shadow-none"
-        >
-          {busyId === x.id ? "Processing…" : "Mark as processed"}
-        </button>
-
-        <a
-          href={`/listings/${x.id}`}
-          className="rounded-lg px-3 py-2 text-sm font-medium
-          bg-white/5 text-white border border-white/10
-          hover:bg-white/10 hover:border-cyan-400/40
-          hover:shadow-[0_0_12px_rgba(34,211,238,0.25)]
-          transition-all"
-        >
-          Open
-        </a>
-      </div>
-    ) : null}
-  </div>
-);
-            })}
+            {(() => {
+              const sales = filtered.filter(x => x.type === "sale" && x.status !== "Follow-up");
+              if (sales.length === 0) return null;
+              return (
+                <div>
+                  <div
+                    className="text-lg font-semibold mb-4"
+                    style={{ color: '#22D3EE', textShadow: '0 0 14px rgba(34,211,238,0.8)' }}
+                  >
+                    Sale ({sales.length})
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {sales.map((x) => renderCard(x))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>

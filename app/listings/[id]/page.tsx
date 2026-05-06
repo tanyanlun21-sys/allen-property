@@ -3,13 +3,12 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import PhotoCarousel from "@/components/PhotoCarousel";
 import { rm } from "@/lib/money";
 
 type Deal = {
   gross: number;
   commission_rate: number;
-  tenancy: number; // ✅ 新增
+  tenancy: number; // �?新增
   deductions: number;
   notes: string | null;
 
@@ -28,7 +27,7 @@ function clampPercent(v: any) {
 }
 
 /**
- * ✅ Smart availability label
+ * �?Smart availability label
  * - if no date OR date <= today => "Ready move in"
  * - else => "Available early/mid/end Feb"
  */
@@ -56,9 +55,9 @@ function isStudioBedrooms(value: any) {
   return value === 0 || value === "0" || String(value ?? "").toLowerCase() === "studio";
 }
 
-/** ✅ 租客模板 */
+/** �?租客模板 */
 function buildTenantText(item: any) {
-  const condo = (item?.condo_name ?? "").trim() || "—";
+  const condo = (item?.condo_name ?? "").trim() || "-";
   const sqft = item?.sqft ? `${item.sqft} sqft` : null;
 
   const bed = isStudioBedrooms(item?.bedrooms)
@@ -113,7 +112,7 @@ function buildTenantText(item: any) {
 async function copyText(text: string) {
   try {
     await navigator.clipboard.writeText(text);
-    alert("Copied ✅");
+    alert("Copied");
   } catch {
     const ta = document.createElement("textarea");
     ta.value = text;
@@ -121,7 +120,28 @@ async function copyText(text: string) {
     ta.select();
     document.execCommand("copy");
     document.body.removeChild(ta);
-    alert("Copied ✅");
+    alert("Copied");
+  }
+}
+
+async function copyPhotoLinks(urls: string[]) {
+  if (urls.length === 0) {
+    alert("No photos to copy.");
+    return;
+  }
+
+  const text = urls.join("\n");
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("Photo links copied");
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    alert("Photo links copied");
   }
 }
 
@@ -145,7 +165,7 @@ export default function ListingDetailPage() {
   const [deal, setDeal] = useState<Deal>({
   gross: 0,
   commission_rate: 0,
-  tenancy: 0, // ✅ 新增
+  tenancy: 0, // �?新增
   deductions: 0,
   notes: "",
 });
@@ -283,11 +303,11 @@ export default function ListingDetailPage() {
 
   const deleteSelectedPhotos = async () => {
     if (selectedPhotoIds.size === 0) {
-      alert("你还没勾选照片");
+      alert("No photos selected");
       return;
     }
 
-    const ok = confirm(`确定要删除选中的 ${selectedPhotoIds.size} 张照片吗？不能撤回。`);
+    const ok = confirm(`确定要删除选中�?${selectedPhotoIds.size} 张照片吗？不能撤回。`);
     if (!ok) return;
 
     setDeletingPhotos(true);
@@ -317,7 +337,7 @@ export default function ListingDetailPage() {
   };
 
   const deleteListing = async () => {
-    const ok = confirm("确定要删除这个房源吗？照片与成交记录会一起删除，不能恢复。");
+    const ok = confirm("Delete this listing? Photos and deal records will also be deleted.");
     if (!ok) return;
 
     setErr(null);
@@ -377,7 +397,7 @@ export default function ListingDetailPage() {
       owner_whatsapp: infoDraft?.owner_whatsapp?.trim() ? infoDraft.owner_whatsapp.trim() : null,
       raw_text: infoDraft?.raw_text?.trim() ? infoDraft.raw_text.trim() : null,
 
-      // ✅ Step 3：任何保存都刷新 last_update
+      // �?Step 3：任何保存都刷新 last_update
       last_update: new Date().toISOString(),
     };
 
@@ -418,7 +438,7 @@ export default function ListingDetailPage() {
   };
 
   const clearDeal = async () => {
-    const ok = confirm("确定要清空这组 Income/Deal 吗？（会从数据库删除这条 deal）");
+    const ok = confirm("Clear this Income/Deal? This will delete the deal record.");
     if (!ok) return;
 
     setErr(null);
@@ -438,27 +458,23 @@ export default function ListingDetailPage() {
     [photoUrls.length]
   );
 
-  if (loading) return <main className="min-h-screen bg-black text-white p-6">Loading…</main>;
+  if (loading) return <main className="min-h-screen bg-black text-white p-6">Loading...</main>;
   if (!item) return <main className="min-h-screen bg-black text-white p-6">Not found.</main>;
 
   return (
-    <main
-  className="min-h-screen text-white bg-[#06070A]
-  bg-[radial-gradient(800px_circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(600px_circle_at_80%_30%,rgba(59,130,246,0.10),transparent_40%),radial-gradient(900px_circle_at_50%_90%,rgba(168,85,247,0.08),transparent_45%)]"
->
+    <main className="min-h-screen text-white bg-[#06070A] bg-[radial-gradient(800px_circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(600px_circle_at_80%_30%,rgba(59,130,246,0.10),transparent_40%),radial-gradient(900px_circle_at_50%_90%,rgba(168,85,247,0.08),transparent_45%)]">
       <div className="mx-auto max-w-3xl px-4 py-6">
-        {/* 下面内容保持你原样（我没动 UI 结构） */}
+        {/* 下面内容保持你原样（我没�?UI 结构�?*/}
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xl font-semibold">{item.condo_name}</div>
-            <div className="text-sm text-zinc-400">{item.area ?? "—"}</div>
+            <div className="text-sm text-zinc-400">{item.area ?? "-"}</div>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={deleteListing}
-              className="text-sm rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-red-300 hover:bg-zinc-800 hover:text-red-200
-              shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+              className="text-sm rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-red-300 hover:bg-zinc-800 hover:text-red-200 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
             >
               Delete listing
             </button>
@@ -469,17 +485,72 @@ export default function ListingDetailPage() {
         </div>
 
         <div className="mt-5">
-          {/* ✅ 只显示 Carousel（不铺缩略图） */}
-          <div className="cursor-zoom-in" onClick={() => openViewer(0)} title="Click to zoom">
-            <PhotoCarousel urls={photoUrls} />
+          <div className="grid gap-3 md:grid-cols-[3fr_2fr]">
+            <div className="rounded-3xl overflow-hidden bg-zinc-900 border border-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06)]">
+              {photoUrls.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => openViewer(0)}
+                  className="block w-full h-full"
+                  title="Click to zoom"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photoUrls[0]}
+                    alt="Listing photo"
+                    className="w-full h-full min-h-[320px] object-cover"
+                  />
+                </button>
+              ) : (
+                <div className="flex min-h-[320px] items-center justify-center p-10 text-center text-sm text-zinc-400">
+                  No photos yet.
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2, 3, 4].map((slot) => {
+                const idx = slot;
+                const url = photoUrls[idx];
+                const isOverflow = slot === 4 && photoUrls.length > 5;
+
+                return (
+                  <div
+                    key={slot}
+                    className="relative rounded-3xl overflow-hidden bg-zinc-900 border border-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06)] h-40"
+                  >
+                    {url ? (
+                      <button
+                        type="button"
+                        onClick={() => openViewer(idx)}
+                        className="block h-full w-full"
+                        title="Click to zoom"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={url} alt={`Listing photo ${idx + 1}`} className="h-full w-full object-cover" />
+                        {isOverflow && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-center px-2 text-sm font-semibold text-white">
+                            Show all media
+                          </div>
+                        )}
+                      </button>
+                    ) : (
+                      <div className="flex h-full items-center justify-center p-4 text-center text-xs text-zinc-500">
+                        {slot === 4 ? "More photos will appear here" : "Photo placeholder"}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* ✅ Upload + Manage + Delete selected（红色） */}
-          <div className="mt-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-wrap gap-3">
               <label className="text-sm text-zinc-300">
-                <span className="rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 hover:bg-zinc-800 cursor-pointer inline-block
-                shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
+                <span
+                  className="rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 hover:bg-zinc-800 cursor-pointer inline-block shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+                >
                   Upload photos
                 </span>
                 <input
@@ -497,17 +568,25 @@ export default function ListingDetailPage() {
                   setManageOpen(true);
                   setSelectedPhotoIds(new Set());
                 }}
-                className="text-sm rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-zinc-200 hover:bg-zinc-800
-                shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+                className="text-sm rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-zinc-200 hover:bg-zinc-800 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
               >
                 Manage photos
               </button>
 
               <button
                 type="button"
+                onClick={() => copyPhotoLinks(photoUrls)}
+                disabled={photoUrls.length === 0}
+                className="text-sm rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-zinc-200 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+              >
+                Copy all photos
+              </button>
+
+              <button
+                type="button"
                 disabled={!manageOpen || selectedPhotoIds.size === 0 || deletingPhotos}
                 onClick={deleteSelectedPhotos}
-                className="text-sm rounded-lg bg-transparent px-2 py-2 text-red-300 hover:text-red-200 disabled:opacity-50"
+                className="text-sm rounded-lg bg-transparent px-3 py-2 text-red-300 hover:text-red-200 disabled:opacity-50"
               >
                 {deletingPhotos ? "Deleting..." : "Delete selected"}
               </button>
@@ -517,15 +596,15 @@ export default function ListingDetailPage() {
               Updated: {new Date(item.updated_at).toLocaleString()}
             </div>
           </div>
+        </div>
 
-          {/* ✅ ✅ ✅ 租客模板区 */}
-          <div className="mt-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
-          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
+          {/* �?�?�?租客模板�?*/}
+          <div className="mt-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-base font-semibold text-white">Tenant template</div>
                 <div className="text-xs text-zinc-400 mt-1">
-                  一键复制 / 一键 WhatsApp（直接贴给租客）
+                  一键复�?/ 一�?WhatsApp（直接贴给租客）
                 </div>
               </div>
 
@@ -533,11 +612,7 @@ export default function ListingDetailPage() {
                 <button
                   type="button"
                   onClick={() => copyText(tenantText)}
-                  className="rounded-lg px-4 py-2 text-sm font-semibold text-black
-bg-cyan-400 hover:bg-cyan-300
-shadow-[0_10px_30px_rgba(34,211,238,0.35)]
-transition-all duration-150
-active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
+                  className="rounded-lg px-4 py-2 text-sm font-semibold text-black bg-cyan-400 hover:bg-cyan-300 shadow-[0_10px_30px_rgba(34,211,238,0.35)] transition-all duration-150 active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
                 >
                   📋 Copy
                 </button>
@@ -559,14 +634,12 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
               className="mt-4 w-full min-h-40 rounded-lg bg-zinc-800 px-3 py-2 text-sm text-zinc-200 outline-none"
             />
           </div>
-        </div>
 
         {err && <div className="mt-4 text-sm text-red-400">{err}</div>}
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {/* Listing info */}
-          <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 space-y-3 text-sm text-zinc-200
-          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
+          <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 space-y-3 text-sm text-zinc-200 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="flex items-center justify-between">
               <div className="text-base font-semibold text-white">Listing info</div>
 
@@ -841,12 +914,7 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
             <button
               onClick={saveDeal}
               disabled={savingDeal}
-              className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-black
-bg-cyan-400 hover:bg-cyan-300
-shadow-[0_6px_18px_rgba(34,211,238,0.35)]
-transition-all duration-150
-active:scale-[0.97]
-disabled:opacity-40 disabled:shadow-none"
+              className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-black bg-cyan-400 hover:bg-cyan-300 shadow-[0_6px_18px_rgba(34,211,238,0.35)] transition-all duration-150 active:scale-[0.97] disabled:opacity-40 disabled:shadow-none"
             >
               {savingDeal ? "Saving..." : "Save income"}
             </button>
@@ -856,23 +924,21 @@ disabled:opacity-40 disabled:shadow-none"
         <div className="mt-6 flex items-center justify-between gap-3">
           <a
             href="/dashboard"
-            className="inline-block rounded-lg bg-white/5 border border-white/10 backdrop-blur px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800
-            shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+            className="inline-block rounded-lg bg-white/5 border border-white/10 backdrop-blur px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
           >
-            View dashboard →
+            View dashboard �?
           </a>
 
           <a
             href="/listings"
-            className="inline-block rounded-lg bg-white/5 border border-white/10 backdrop-blur px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800
-            shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+            className="inline-block rounded-lg bg-white/5 border border-white/10 backdrop-blur px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
           >
             Back to listings
           </a>
         </div>
       </div>
 
-      {/* ✅ Viewer modal：hover 才显示 close + 动效 */}
+      {/* �?Viewer modal：hover 才显�?close + 动效 */}
       {viewerOpen && photoUrls.length > 0 && (
         <div
           className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
@@ -892,12 +958,10 @@ disabled:opacity-40 disabled:shadow-none"
             <button
               type="button"
               onClick={() => setViewerOpen(false)}
-              className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-200
-                         -translate-y-1 group-hover:translate-y-0
-                         rounded-full bg-black/60 px-3 py-2 text-white hover:bg-black/80"
+              className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-y-1 group-hover:translate-y-0 rounded-full bg-black/60 px-3 py-2 text-white hover:bg-black/80"
               title="Close"
             >
-              ✕
+              �?
             </button>
 
             {photoUrls.length > 1 && (
@@ -909,14 +973,14 @@ disabled:opacity-40 disabled:shadow-none"
                   }
                   className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-white hover:bg-black/70"
                 >
-                  ‹
+                  �?
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewerIndex((i) => (i + 1) % photoUrls.length)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-white hover:bg-black/70"
                 >
-                  ›
+                  �?
                 </button>
               </>
             )}
@@ -924,15 +988,14 @@ disabled:opacity-40 disabled:shadow-none"
         </div>
       )}
 
-      {/* ✅ Manage modal：勾选要删的照片 */}
+      {/* �?Manage modal：勾选要删的照片 */}
       {manageOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center"
           onClick={() => setManageOpen(false)}
         >
           <div
-            className="w-[95vw] max-w-3xl rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
-            shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+            className="w-[95vw] max-w-3xl rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
