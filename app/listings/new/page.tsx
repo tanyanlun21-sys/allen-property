@@ -17,7 +17,7 @@ type ListingStatus =
 
 type Form = {
   type: ListingType;
-  status: ListingStatus;
+  status: "Available" | "Follow-up";
   condo_name: string;
   area: string;
   sqft: string; // keep as string for input UX
@@ -26,6 +26,9 @@ type Form = {
   carparks: string;
   price: string;
   available_from: string; // yyyy-mm-dd or ""
+  furnish: "" | "Fully" | "Partial";
+  raw_text: string;
+  owner_whatsapp: string;
   is_studio: boolean;
 };
 
@@ -37,9 +40,11 @@ function toNullableNumber(v: string): number | null {
 }
 
 export default function NewListingPage() {
+  const today = new Date().toISOString().slice(0, 10);
+
   const [form, setForm] = useState<Form>({
     type: "rent",
-    status: "New",
+    status: "Available",
     condo_name: "",
     area: "",
     sqft: "",
@@ -47,7 +52,10 @@ export default function NewListingPage() {
     bathrooms: "",
     carparks: "",
     price: "",
-    available_from: "",
+    available_from: today,
+    furnish: "",
+    owner_whatsapp: "",
+    raw_text: "",
     is_studio: false,
   });
 
@@ -71,11 +79,8 @@ export default function NewListingPage() {
       return;
     }
 
-    // ✅ Available From 只在 status=Available 时才写入（其他状态自动清空）
-    const availableFrom =
-      form.status === "Available" && form.available_from.trim() !== ""
-        ? form.available_from
-        : null;
+    // ✅ Available From 默认今天，创建时写入
+    const availableFrom = today;
 
     const nowIso = new Date().toISOString();
 
@@ -90,6 +95,9 @@ export default function NewListingPage() {
       bathrooms: toNullableNumber(form.bathrooms),
       carparks: toNullableNumber(form.carparks),
       price: toNullableNumber(form.price),
+      furnish: form.furnish || null,
+      owner_whatsapp: form.owner_whatsapp.trim() || null,
+      raw_text: form.raw_text.trim() ? form.raw_text.trim() : null,
       available_from: availableFrom,
 
       // ✅ Step 2：创建时写入
@@ -142,36 +150,18 @@ export default function NewListingPage() {
               <option value="rent">Rent</option>
               <option value="sale">Sale</option>
             </select>
-
             <select
               className="rounded-lg bg-zinc-800 px-3 py-2"
               value={form.status}
-              onChange={(e) => {
-                const next = e.target.value as ListingStatus;
-
-                // ✅ 防误操作：从 Available 切到其他状态时，提醒会清空日期
-                if (form.status === "Available" && next !== "Available" && form.available_from) {
-                  const ok = confirm(
-                    "你正在把状态改为非 Available，将会清空 Available From 日期。确定继续吗？"
-                  );
-                  if (!ok) return;
-                }
-
+              onChange={(e) =>
                 setForm((f) => ({
                   ...f,
-                  status: next,
-                  available_from: next === "Available" ? f.available_from : "",
-                }));
-              }}
+                  status: e.target.value as "Available" | "Follow-up",
+                }))
+              }
             >
-              <option value="New">New</option>
               <option value="Available">Available</option>
               <option value="Follow-up">Follow-up</option>
-              <option value="Viewing">Viewing</option>
-              <option value="Negotiating">Negotiating</option>
-              <option value="Booked">Booked</option>
-              <option value="Closed">Closed</option>
-              <option value="Inactive">Inactive</option>
             </select>
           </div>
 
@@ -190,92 +180,92 @@ export default function NewListingPage() {
           />
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <div className="text-xs text-zinc-400 mb-1">Available From</div>
+            <div className="grid grid-cols-[1fr_auto] gap-2">
               <input
-                type="date"
-                disabled={form.status !== "Available"}
-                className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none disabled:opacity-50"
-                value={form.available_from}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, available_from: e.target.value }))
-                }
+                type={form.is_studio ? "text" : "number"}
+                inputMode="numeric"
+                disabled={form.is_studio}
+                className="min-w-0 rounded-lg bg-zinc-800 px-3 py-2 disabled:opacity-60"
+                placeholder="Rooms"
+                value={form.is_studio ? "Studio" : form.bedrooms}
+                onChange={(e) => setForm((f) => ({ ...f, bedrooms: e.target.value }))}
               />
-              <div className="mt-1 text-xs text-zinc-500">
-                只有 status=Available 才能选择日期
-              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setForm((f) => ({
+                    ...f,
+                    is_studio: !f.is_studio,
+                    bedrooms: !f.is_studio ? "" : f.bedrooms,
+                  }))
+                }
+                className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+                  form.is_studio
+                    ? "border-cyan-300 bg-cyan-400 text-black"
+                    : "border-white/10 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                }`}
+              >
+                Studio
+              </button>
             </div>
 
-            <div>
-              <div className="text-xs text-zinc-400 mb-1">
-                {form.type === "rent" ? "Rent (RM)" : "Sale (RM)"}
-              </div>
-              <input
-                type="number"
-                inputMode="decimal"
-                className="w-full rounded-lg bg-zinc-800 px-3 py-2"
-                placeholder={form.type === "rent" ? "Rent (RM)" : "Sale (RM)"}
-                value={form.price}
-                onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-              />
-            </div>
+            <input
+              type="number"
+              inputMode="numeric"
+              className="rounded-lg bg-zinc-800 px-3 py-2"
+              placeholder="Baths"
+              value={form.bathrooms}
+              onChange={(e) => setForm((f) => ({ ...f, bathrooms: e.target.value }))}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <input
               type="number"
-              inputMode="decimal"
+              inputMode="numeric"
               className="rounded-lg bg-zinc-800 px-3 py-2"
-              placeholder="Sqft"
-              value={form.sqft}
-              onChange={(e) => setForm((f) => ({ ...f, sqft: e.target.value }))}
+              placeholder="Carparks"
+              value={form.carparks}
+              onChange={(e) => setForm((f) => ({ ...f, carparks: e.target.value }))}
             />
-            <div className="grid grid-cols-3 gap-3">
-              <div className="grid grid-cols-[1fr_auto] gap-2">
-                <input
-                  type={form.is_studio ? "text" : "number"}
-                  inputMode="numeric"
-                  disabled={form.is_studio}
-                  className="min-w-0 rounded-lg bg-zinc-800 px-3 py-2 disabled:opacity-60"
-                  placeholder="Rooms"
-                  value={form.is_studio ? "Studio" : form.bedrooms}
-                  onChange={(e) => setForm((f) => ({ ...f, bedrooms: e.target.value }))}
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm((f) => ({
-                      ...f,
-                      is_studio: !f.is_studio,
-                      bedrooms: !f.is_studio ? "" : f.bedrooms,
-                    }))
-                  }
-                  className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${
-                    form.is_studio
-                      ? "border-cyan-300 bg-cyan-400 text-black"
-                      : "border-white/10 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
-                  }`}
-                >
-                  Studio
-                </button>
-              </div>
-              <input
-                type="number"
-                inputMode="numeric"
-                className="rounded-lg bg-zinc-800 px-3 py-2"
-                placeholder="Baths"
-                value={form.bathrooms}
-                onChange={(e) => setForm((f) => ({ ...f, bathrooms: e.target.value }))}
-              />
-              <input
-                type="number"
-                inputMode="numeric"
-                className="rounded-lg bg-zinc-800 px-3 py-2"
-                placeholder="Carparks"
-                value={form.carparks}
-                onChange={(e) => setForm((f) => ({ ...f, carparks: e.target.value }))}
-              />
+
+            <div>
+              <div className="text-xs text-zinc-400 mb-1">Furnish</div>
+              <select
+                className="w-full rounded-lg bg-zinc-800 px-3 py-2"
+                value={form.furnish}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    furnish: e.target.value as "" | "Fully" | "Partial",
+                  }))
+                }
+              >
+                <option value=""> </option>
+                <option value="Fully">Fully furnished</option>
+                <option value="Partial">Partial furnished</option>
+              </select>
             </div>
+          </div>
+
+          <div>
+            <div className="text-xs text-zinc-400 mb-1">Owner WhatsApp</div>
+            <input
+              className="w-full rounded-lg bg-zinc-800 px-3 py-2"
+              placeholder="e.g. 60123456789 / 0123456789"
+              value={form.owner_whatsapp}
+              onChange={(e) => setForm((f) => ({ ...f, owner_whatsapp: e.target.value }))}
+            />
+          </div>
+
+          <div>
+            <div className="text-xs text-zinc-400 mb-1">Remark (optional)</div>
+            <textarea
+              className="w-full min-h-24 rounded-lg bg-zinc-800 px-3 py-2 text-sm text-zinc-200 outline-none"
+              placeholder="Owner message, WhatsApp note, internal remark..."
+              value={form.raw_text}
+              onChange={(e) => setForm((f) => ({ ...f, raw_text: e.target.value }))}
+            />
           </div>
 
           {err && <div className="text-sm text-red-400">{err}</div>}
@@ -290,7 +280,7 @@ transition-all duration-150
 active:scale-[0.97]
 disabled:opacity-40 disabled:shadow-none"
           >
-            {saving ? "Creating..." : "Create"}
+            {saving ? "Adding..." : "Add"}
           </button>
         </div>
 

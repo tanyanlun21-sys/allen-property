@@ -745,9 +745,9 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
               </div>
 
               <div className="col-span-2">
-                <div className="text-xs text-zinc-400 mb-1">Raw paste</div>
+                <div className="text-xs text-zinc-400 mb-1">Remark</div>
                 {editingInfo ? (
-                  <textarea className="w-full min-h-28 rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.raw_text ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, raw_text: e.target.value }))} placeholder="paste text..." />
+                  <textarea className="w-full min-h-28 rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.raw_text ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, raw_text: e.target.value }))} placeholder="remark..." />
                 ) : (
                   <div className="whitespace-pre-wrap text-zinc-200">{item.raw_text ?? "-"}</div>
                 )}

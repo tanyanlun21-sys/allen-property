@@ -279,17 +279,6 @@ export default function ListingsPage() {
 
           <div className="flex gap-2">
             <a
-  href="/listings/quick"
-  className="rounded-lg px-4 py-2 text-sm font-semibold text-black
-bg-cyan-400 hover:bg-cyan-300
-shadow-[0_10px_30px_rgba(34,211,238,0.35)]
-transition-all duration-150
-active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
->
-  ⚡ Quick Add
-</a>
-
-<a
   href="/listings/new"
   className="rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-sm text-white hover:bg-white/10"
 >
