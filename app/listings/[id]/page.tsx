@@ -52,12 +52,20 @@ function availabilityLabel(availableFrom: any) {
   return `Available ${bucket} ${mon}`;
 }
 
+function isStudioBedrooms(value: any) {
+  return value === 0 || value === "0" || String(value ?? "").toLowerCase() === "studio";
+}
+
 /** ✅ 租客模板 */
 function buildTenantText(item: any) {
   const condo = (item?.condo_name ?? "").trim() || "—";
   const sqft = item?.sqft ? `${item.sqft} sqft` : null;
 
-  const bed = item?.bedrooms != null && item.bedrooms !== "" ? `${item.bedrooms} bedroom` : null;
+  const bed = isStudioBedrooms(item?.bedrooms)
+    ? "Studio"
+    : item?.bedrooms != null && item.bedrooms !== ""
+    ? `${item.bedrooms} bedroom`
+    : null;
   const bath =
     item?.bathrooms != null && item.bathrooms !== "" ? `${item.bathrooms} bathroom` : null;
 
@@ -351,7 +359,11 @@ export default function ListingDetailPage() {
       condo_name: (infoDraft.condo_name ?? "").trim(),
       area: infoDraft.area?.trim() ? infoDraft.area.trim() : null,
       sqft: infoDraft.sqft === "" ? null : Number(infoDraft.sqft) || null,
-      bedrooms: infoDraft.bedrooms === "" ? null : Number(infoDraft.bedrooms) || null,
+      bedrooms: isStudioBedrooms(infoDraft.bedrooms)
+        ? 0
+        : infoDraft.bedrooms === ""
+        ? null
+        : Number(infoDraft.bedrooms) || null,
       bathrooms: infoDraft.bathrooms === "" ? null : Number(infoDraft.bathrooms) || null,
       carparks: infoDraft.carparks === "" ? null : Number(infoDraft.carparks) || null,
       price: infoDraft.price === "" ? null : Number(infoDraft.price) || null,
@@ -585,12 +597,7 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
                     type="button"
                     disabled={savingInfo}
                     onClick={saveListingInfo}
-                    className="text-xs rounded-lg px-3 py-2 text-sm font-semibold text-black
-bg-cyan-400 hover:bg-cyan-300
-shadow-[0_6px_18px_rgba(34,211,238,0.35)]
-transition-all duration-150
-active:scale-[0.97]
-disabled:opacity-40 disabled:shadow-none"
+                    className="text-xs rounded-lg px-3 py-2 text-sm font-semibold text-black bg-cyan-400 hover:bg-cyan-300 shadow-[0_6px_18px_rgba(34,211,238,0.35)] transition-all duration-150 active:scale-[0.97] disabled:opacity-40 disabled:shadow-none"
                   >
                     {savingInfo ? "Saving..." : "Save"}
                   </button>
@@ -602,11 +609,7 @@ disabled:opacity-40 disabled:shadow-none"
               <div>
                 <div className="text-xs text-zinc-400 mb-1">Type</div>
                 {editingInfo ? (
-                  <select
-                    className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
-                    value={infoDraft?.type ?? "rent"}
-                    onChange={(e) => setInfoDraft((d: any) => ({ ...d, type: e.target.value }))}
-                  >
+                  <select className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.type ?? "rent"} onChange={(e) => setInfoDraft((d: any) => ({ ...d, type: e.target.value }))}>
                     <option value="rent">rent</option>
                     <option value="sale">sale</option>
                   </select>
@@ -618,160 +621,137 @@ disabled:opacity-40 disabled:shadow-none"
               <div>
                 <div className="text-xs text-zinc-400 mb-1">Status</div>
                 {editingInfo ? (
-                  <select
-                    className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
-                    value={infoDraft?.status ?? "available"}
-                    onChange={(e) => setInfoDraft((d: any) => ({ ...d, status: e.target.value }))}
-                  >
+                  <select className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.status ?? "available"} onChange={(e) => setInfoDraft((d: any) => ({ ...d, status: e.target.value }))}>
                     <option value="New">New</option>
-<option value="Available">Available</option>
-<option value="Follow-up">Follow-up</option>
-<option value="Viewing">Viewing</option>
-<option value="Negotiating">Negotiating</option>
-<option value="Booked">Booked</option>
-<option value="Closed">Closed</option>
-<option value="Inactive">Inactive</option>
+                    <option value="Available">Available</option>
+                    <option value="Follow-up">Follow-up</option>
+                    <option value="Viewing">Viewing</option>
+                    <option value="Negotiating">Negotiating</option>
+                    <option value="Booked">Booked</option>
+                    <option value="Closed">Closed</option>
+                    <option value="Inactive">Inactive</option>
                   </select>
                 ) : (
                   <div>{item.status}</div>
                 )}
               </div>
 
-              {/* ✅ Available date 可编辑 */}
-              <div className="col-span-2">
+              <div>
                 <div className="text-xs text-zinc-400 mb-1">Available from</div>
                 {editingInfo ? (
-                  <input
-                    type="date"
-                    className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
-                    value={infoDraft?.available_from ?? ""}
-                    onChange={(e) =>
-                      setInfoDraft((d: any) => ({ ...d, available_from: e.target.value }))
-                    }
-                  />
+                  <input type="date" className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.available_from ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, available_from: e.target.value }))} />
                 ) : (
                   <div>{availabilityLabel(item.available_from)}</div>
                 )}
               </div>
 
-{/* ✅ Next follow-up */}
-<div className="col-span-2">
-  <div className="text-xs text-zinc-400 mb-1">Next follow-up</div>
-  {editingInfo ? (
-    <input
-      type="date"
-      className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
-      value={infoDraft?.next_follow_up ?? ""}
-      onChange={(e) =>
-        setInfoDraft((d: any) => ({ ...d, next_follow_up: e.target.value }))
-      }
-    />
-  ) : (
-    <div>{item.next_follow_up ? new Date(item.next_follow_up).toLocaleDateString() : "—"}</div>
-  )}
-</div>
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Next follow-up</div>
+                {editingInfo ? (
+                  <input type="date" className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.next_follow_up ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, next_follow_up: e.target.value }))} />
+                ) : (
+                  <div>{item.next_follow_up ? new Date(item.next_follow_up).toLocaleDateString() : "-"}</div>
+                )}
+              </div>
 
-              {/* ✅ Furnish（Fully / Partial） */}
-              <div className="col-span-2">
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Condo name</div>
+                {editingInfo ? (
+                  <input className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.condo_name ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, condo_name: e.target.value }))} />
+                ) : (
+                  <div className="text-white font-medium">{item.condo_name}</div>
+                )}
+              </div>
+
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Area</div>
+                {editingInfo ? (
+                  <input className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.area ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, area: e.target.value }))} placeholder="e.g. Mont Kiara" />
+                ) : (
+                  <div>{item.area ?? "-"}</div>
+                )}
+              </div>
+
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Sqft</div>
+                {editingInfo ? (
+                  <input type="number" className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.sqft ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, sqft: e.target.value }))} />
+                ) : (
+                  <div>{item.sqft ?? "-"}</div>
+                )}
+              </div>
+
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Price (RM)</div>
+                {editingInfo ? (
+                  <input type="number" className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.price ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, price: e.target.value }))} />
+                ) : (
+                  <div>{item.price ?? "-"}</div>
+                )}
+              </div>
+
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Bedrooms</div>
+                {editingInfo ? (
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <input type={isStudioBedrooms(infoDraft?.bedrooms) ? "text" : "number"} disabled={isStudioBedrooms(infoDraft?.bedrooms)} className="min-w-0 rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none disabled:opacity-60" value={isStudioBedrooms(infoDraft?.bedrooms) ? "Studio" : infoDraft?.bedrooms ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, bedrooms: e.target.value }))} />
+                    <button type="button" onClick={() => setInfoDraft((d: any) => ({ ...d, bedrooms: isStudioBedrooms(d?.bedrooms) ? "" : "0" }))} className={isStudioBedrooms(infoDraft?.bedrooms) ? "rounded-lg border border-cyan-300 bg-cyan-400 px-3 py-2 text-xs font-semibold text-black transition" : "rounded-lg border border-white/10 bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-700"}>
+                      Studio
+                    </button>
+                  </div>
+                ) : (
+                  <div>{isStudioBedrooms(item.bedrooms) ? "Studio" : item.bedrooms ?? "-"}</div>
+                )}
+              </div>
+
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Bathrooms</div>
+                {editingInfo ? (
+                  <input type="number" className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.bathrooms ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, bathrooms: e.target.value }))} />
+                ) : (
+                  <div>{item.bathrooms ?? "-"}</div>
+                )}
+              </div>
+
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Carparks</div>
+                {editingInfo ? (
+                  <input type="number" className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.carparks ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, carparks: e.target.value }))} />
+                ) : (
+                  <div>{item.carparks ?? "-"}</div>
+                )}
+              </div>
+
+              <div>
                 <div className="text-xs text-zinc-400 mb-1">Furnish</div>
                 {editingInfo ? (
-                  <select
-                    className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
-                    value={infoDraft?.furnish ?? ""}
-                    onChange={(e) => setInfoDraft((d: any) => ({ ...d, furnish: e.target.value }))}
-                  >
-                    <option value="">— Select —</option>
+                  <select className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.furnish ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, furnish: e.target.value }))}>
+                    <option value="">Select</option>
                     <option value="Fully">Fully furnished</option>
                     <option value="Partial">Partial furnished</option>
                   </select>
                 ) : (
-                  <div>{item.furnish ?? "—"}</div>
+                  <div>{item.furnish ?? "-"}</div>
                 )}
               </div>
-            </div>
 
-{/* ✅ Owner WhatsApp（只在详情页显示，不影响 listing 卡片） */}
-<div>
-  <div className="text-xs text-zinc-400 mb-1">Owner WhatsApp</div>
-  {editingInfo ? (
-    <input
-      className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
-      value={infoDraft?.owner_whatsapp ?? ""}
-      onChange={(e) =>
-        setInfoDraft((d: any) => ({ ...d, owner_whatsapp: e.target.value }))
-      }
-      placeholder="e.g. 60123456789 / 0123456789"
-    />
-  ) : (
-    <div>{item.owner_whatsapp ?? "—"}</div>
-  )}
-</div>
-{/* ✅ Raw paste（从 Quick Add 进来的原始文字） */}
-<div className="col-span-2">
-  <div className="text-xs text-zinc-400 mb-1">Raw paste</div>
+              <div className="col-span-2">
+                <div className="text-xs text-zinc-400 mb-1">Owner WhatsApp</div>
+                {editingInfo ? (
+                  <input className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.owner_whatsapp ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, owner_whatsapp: e.target.value }))} placeholder="e.g. 60123456789 / 0123456789" />
+                ) : (
+                  <div>{item.owner_whatsapp ?? "-"}</div>
+                )}
+              </div>
 
-  {editingInfo ? (
-    <textarea
-      className="w-full min-h-28 rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
-      value={infoDraft?.raw_text ?? ""}
-      onChange={(e) => setInfoDraft((d: any) => ({ ...d, raw_text: e.target.value }))}
-      placeholder="paste text..."
-    />
-  ) : (
-    <div className="whitespace-pre-wrap text-zinc-200">
-      {item.raw_text ?? "—"}
-    </div>
-  )}
-</div>
-            <div>
-              <div className="text-xs text-zinc-400 mb-1">Condo name</div>
-              {editingInfo ? (
-                <input
-                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
-                  value={infoDraft?.condo_name ?? ""}
-                  onChange={(e) => setInfoDraft((d: any) => ({ ...d, condo_name: e.target.value }))}
-                />
-              ) : (
-                <div className="text-white font-medium">{item.condo_name}</div>
-              )}
-            </div>
-
-            <div>
-              <div className="text-xs text-zinc-400 mb-1">Area</div>
-              {editingInfo ? (
-                <input
-                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
-                  value={infoDraft?.area ?? ""}
-                  onChange={(e) => setInfoDraft((d: any) => ({ ...d, area: e.target.value }))}
-                  placeholder="e.g. Mont Kiara"
-                />
-              ) : (
-                <div>{item.area ?? "—"}</div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                ["sqft", "Sqft"],
-                ["price", "Price (RM)"],
-                ["bedrooms", "Bedrooms"],
-                ["bathrooms", "Bathrooms"],
-                ["carparks", "Carparks"],
-              ].map(([key, label]) => (
-                <div key={key}>
-                  <div className="text-xs text-zinc-400 mb-1">{label}</div>
-                  {editingInfo ? (
-                    <input
-                      type="number"
-                      className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
-                      value={infoDraft?.[key] ?? ""}
-                      onChange={(e) => setInfoDraft((d: any) => ({ ...d, [key]: e.target.value }))}
-                    />
-                  ) : (
-                    <div>{item[key] ?? "—"}</div>
-                  )}
-                </div>
-              ))}
+              <div className="col-span-2">
+                <div className="text-xs text-zinc-400 mb-1">Raw paste</div>
+                {editingInfo ? (
+                  <textarea className="w-full min-h-28 rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.raw_text ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, raw_text: e.target.value }))} placeholder="paste text..." />
+                ) : (
+                  <div className="whitespace-pre-wrap text-zinc-200">{item.raw_text ?? "-"}</div>
+                )}
+              </div>
             </div>
           </div>
 

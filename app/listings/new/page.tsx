@@ -26,6 +26,7 @@ type Form = {
   carparks: string;
   price: string;
   available_from: string; // yyyy-mm-dd or ""
+  is_studio: boolean;
 };
 
 function toNullableNumber(v: string): number | null {
@@ -47,6 +48,7 @@ export default function NewListingPage() {
     carparks: "",
     price: "",
     available_from: "",
+    is_studio: false,
   });
 
   const [saving, setSaving] = useState(false);
@@ -84,7 +86,7 @@ export default function NewListingPage() {
       condo_name: form.condo_name.trim(),
       area: form.area.trim() || null,
       sqft: toNullableNumber(form.sqft),
-      bedrooms: toNullableNumber(form.bedrooms),
+      bedrooms: form.is_studio ? 0 : toNullableNumber(form.bedrooms),
       bathrooms: toNullableNumber(form.bathrooms),
       carparks: toNullableNumber(form.carparks),
       price: toNullableNumber(form.price),
@@ -229,14 +231,34 @@ export default function NewListingPage() {
               onChange={(e) => setForm((f) => ({ ...f, sqft: e.target.value }))}
             />
             <div className="grid grid-cols-3 gap-3">
-              <input
-                type="number"
-                inputMode="numeric"
-                className="rounded-lg bg-zinc-800 px-3 py-2"
-                placeholder="Rooms"
-                value={form.bedrooms}
-                onChange={(e) => setForm((f) => ({ ...f, bedrooms: e.target.value }))}
-              />
+              <div className="grid grid-cols-[1fr_auto] gap-2">
+                <input
+                  type={form.is_studio ? "text" : "number"}
+                  inputMode="numeric"
+                  disabled={form.is_studio}
+                  className="min-w-0 rounded-lg bg-zinc-800 px-3 py-2 disabled:opacity-60"
+                  placeholder="Rooms"
+                  value={form.is_studio ? "Studio" : form.bedrooms}
+                  onChange={(e) => setForm((f) => ({ ...f, bedrooms: e.target.value }))}
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm((f) => ({
+                      ...f,
+                      is_studio: !f.is_studio,
+                      bedrooms: !f.is_studio ? "" : f.bedrooms,
+                    }))
+                  }
+                  className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+                    form.is_studio
+                      ? "border-cyan-300 bg-cyan-400 text-black"
+                      : "border-white/10 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                  }`}
+                >
+                  Studio
+                </button>
+              </div>
               <input
                 type="number"
                 inputMode="numeric"
