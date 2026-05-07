@@ -1099,14 +1099,30 @@ export default function ListingDetailPage() {
             <div className="mt-5 flex items-center justify-between">
               <div className="text-xs text-zinc-400">Selected: {selectedPhotoIds.size}</div>
 
-              <button
-                type="button"
-                disabled={selectedPhotoIds.size === 0 || deletingPhotos}
-                onClick={deleteSelectedPhotos}
-                className="rounded-lg px-3 py-2 text-sm text-red-300 hover:text-red-200 disabled:opacity-50"
-              >
-                {deletingPhotos ? "Deleting..." : "Delete selected"}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedPhotoIds.size < photos.length) {
+                      setSelectedPhotoIds(new Set(photos.map(p => p.id)));
+                    } else {
+                      setSelectedPhotoIds(new Set());
+                    }
+                  }}
+                  className="rounded-lg px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
+                >
+                  {selectedPhotoIds.size < photos.length ? "Select all" : "Clear selection"}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={selectedPhotoIds.size === 0 || deletingPhotos}
+                  onClick={deleteSelectedPhotos}
+                  className="rounded-lg px-3 py-2 text-sm text-red-300 hover:text-red-200 disabled:opacity-50"
+                >
+                  {deletingPhotos ? "Deleting..." : "Delete selected"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
