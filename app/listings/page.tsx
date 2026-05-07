@@ -212,15 +212,23 @@ export default function ListingsPage() {
       const okType = typeTab === "all" ? true : x.type === typeTab;
       const okStatus = status === "all" ? true : x.status === status;
 
-      const searchLower = search.toLowerCase().trim();
-      const okSearch = searchLower === "" || [
+      const terms = search.trim().toLowerCase().split(/\s+/).filter(Boolean);
+
+      const searchable = [
         x.condo_name,
         x.area,
         x.owner_whatsapp,
-        x.raw_text
-      ].filter(Boolean).some(field => field?.toLowerCase().includes(searchLower));
+        x.raw_text,
+        x.status,
+        x.type,
+        x.price,
+        x.sqft,
+      ].filter(Boolean).join(" ").toLowerCase();
 
-      return okView && okType && okStatus && okSearch;
+      const matchesSearch =
+        terms.length === 0 || terms.every((term) => searchable.includes(term));
+
+      return okView && okType && okStatus && matchesSearch;
     });
 
     const followUps = base.filter(x => x.status === "Follow-up");
