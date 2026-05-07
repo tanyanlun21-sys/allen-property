@@ -145,6 +145,40 @@ async function copyPhotoLinks(urls: string[]) {
   }
 }
 
+async function copyPhotos(urls: string[]) {
+  if (urls.length === 0) {
+    alert("No photos to copy.");
+    return;
+  }
+
+  if (urls.length === 1) {
+    try {
+      const response = await fetch(urls[0]);
+      const blob = await response.blob();
+      const item = new ClipboardItem({ [blob.type]: blob });
+      await navigator.clipboard.write([item]);
+      alert("Photo copied");
+    } catch (error) {
+      console.error("Failed to copy photo:", error);
+      await copyPhotoLinks(urls);
+      alert("Failed to copy photo. Photo links copied instead.");
+    }
+  } else {
+    // Multiple photos: try to copy the first one
+    try {
+      const response = await fetch(urls[0]);
+      const blob = await response.blob();
+      const item = new ClipboardItem({ [blob.type]: blob });
+      await navigator.clipboard.write([item]);
+      alert("Browser can copy one image at a time. First photo copied.");
+    } catch (error) {
+      console.error("Failed to copy photo:", error);
+      await copyPhotoLinks(urls);
+      alert("Failed to copy photo. Photo links copied instead.");
+    }
+  }
+}
+
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
 
@@ -161,6 +195,8 @@ export default function ListingDetailPage() {
 
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
+
+  const [showAllOpen, setShowAllOpen] = useState(false);
 
   const [deal, setDeal] = useState<Deal>({
   gross: 0,
@@ -485,7 +521,7 @@ export default function ListingDetailPage() {
         </div>
 
         <div className="mt-5">
-          <div className="grid gap-3 md:grid-cols-[3fr_2fr]">
+          <div className="grid gap-3 md:grid-cols-[3fr_2fr] h-[420px]">
             <div className="rounded-3xl overflow-hidden bg-zinc-900 border border-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06)]">
               {photoUrls.length > 0 ? (
                 <button
@@ -498,17 +534,17 @@ export default function ListingDetailPage() {
                   <img
                     src={photoUrls[0]}
                     alt="Listing photo"
-                    className="w-full h-full min-h-[320px] object-cover"
+                    className="w-full h-full object-cover"
                   />
                 </button>
               ) : (
-                <div className="flex min-h-[320px] items-center justify-center p-10 text-center text-sm text-zinc-400">
+                <div className="flex h-full items-center justify-center p-10 text-center text-sm text-zinc-400">
                   No photos yet.
                 </div>
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 h-full">
               {[1, 2, 3, 4].map((slot) => {
                 const idx = slot;
                 const url = photoUrls[idx];
@@ -517,12 +553,12 @@ export default function ListingDetailPage() {
                 return (
                   <div
                     key={slot}
-                    className="relative rounded-3xl overflow-hidden bg-zinc-900 border border-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06)] h-40"
+                    className="relative rounded-3xl overflow-hidden bg-zinc-900 border border-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06)]"
                   >
                     {url ? (
                       <button
                         type="button"
-                        onClick={() => openViewer(idx)}
+                        onClick={() => isOverflow ? setShowAllOpen(true) : openViewer(idx)}
                         className="block h-full w-full"
                         title="Click to zoom"
                       >
@@ -575,11 +611,11 @@ export default function ListingDetailPage() {
 
               <button
                 type="button"
-                onClick={() => copyPhotoLinks(photoUrls)}
+                onClick={() => copyPhotos(photoUrls)}
                 disabled={photoUrls.length === 0}
                 className="text-sm rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-zinc-200 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
               >
-                Copy all photos
+                Copy photos
               </button>
 
               <button
@@ -961,7 +997,7 @@ export default function ListingDetailPage() {
               className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-y-1 group-hover:translate-y-0 rounded-full bg-black/60 px-3 py-2 text-white hover:bg-black/80"
               title="Close"
             >
-              �?
+              ×
             </button>
 
             {photoUrls.length > 1 && (
@@ -973,14 +1009,14 @@ export default function ListingDetailPage() {
                   }
                   className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-white hover:bg-black/70"
                 >
-                  �?
+                  ‹
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewerIndex((i) => (i + 1) % photoUrls.length)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-white hover:bg-black/70"
                 >
-                  �?
+                  ›
                 </button>
               </>
             )}
@@ -1072,6 +1108,57 @@ export default function ListingDetailPage() {
                 {deletingPhotos ? "Deleting..." : "Delete selected"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Show all media modal */}
+      {showAllOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center"
+          onClick={() => setShowAllOpen(false)}
+        >
+          <div
+            className="w-[95vw] max-w-4xl rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div className="text-base font-semibold text-white">All photos</div>
+              <button
+                type="button"
+                onClick={() => setShowAllOpen(false)}
+                className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-zinc-200 hover:bg-white/10"
+              >
+                Close
+              </button>
+            </div>
+
+            {photos.length === 0 ? (
+              <div className="mt-4 text-sm text-zinc-300">No photos.</div>
+            ) : (
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {photos.map((p, idx) => {
+                  const url =
+                    supabase.storage.from("listing-photos").getPublicUrl(p.storage_path).data
+                      .publicUrl;
+
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setShowAllOpen(false);
+                        openViewer(idx);
+                      }}
+                      className="rounded-xl overflow-hidden bg-zinc-800 border border-transparent hover:border-white/50 transition-colors"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt="" className="h-32 w-full object-cover" />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}
