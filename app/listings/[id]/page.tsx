@@ -193,6 +193,8 @@ export default function ListingDetailPage() {
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [deletingPhotos, setDeletingPhotos] = useState(false);
   const [updatingOrder, setUpdatingOrder] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPhotoId, setMenuPhotoId] = useState<string | null>(null);
 
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
@@ -424,6 +426,31 @@ export default function ListingDetailPage() {
 
       setSelectedPhotoIds(new Set());
       setManageOpen(false);
+      await load();
+    } catch (e: any) {
+      setErr(e.message ?? "Delete failed");
+    } finally {
+      setDeletingPhotos(false);
+    }
+  };
+
+  const deleteSinglePhoto = async (photoId: string) => {
+    const ok = confirm("Delete this photo? Cannot undo.");
+    if (!ok) return;
+
+    setDeletingPhotos(true);
+    setErr(null);
+
+    try {
+      const photo = photos.find(p => p.id === photoId);
+      if (photo?.storage_path) {
+        const rmS = await supabase.storage.from("listing-photos").remove([photo.storage_path]);
+        if (rmS.error) throw new Error(rmS.error.message);
+      }
+
+      const rmDb = await supabase.from("listing_photos").delete().eq("id", photoId);
+      if (rmDb.error) throw new Error(rmDb.error.message);
+
       await load();
     } catch (e: any) {
       setErr(e.message ?? "Delete failed");
@@ -1095,14 +1122,26 @@ export default function ListingDetailPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <div className="text-base font-semibold text-white">Manage photos</div>
-              <button
-                type="button"
-                onClick={() => setManageOpen(false)}
-                className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-zinc-200 hover:bg-white/10"
-              >
-                Close
-              </button>
+              <div>
+                <div className="text-base font-semibold text-white">Photos ({photos.length})</div>
+                <div className="text-xs text-zinc-400">Drag to reorder</div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('photo-upload')?.click()}
+                  className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-zinc-200 hover:bg-white/10"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setManageOpen(false)}
+                  className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-zinc-200 hover:bg-white/10"
+                >
+                  Close
+                </button>
+              </div>
             </div>
 
             {photos.length === 0 ? (
@@ -1113,73 +1152,82 @@ export default function ListingDetailPage() {
                   const url =
                     supabase.storage.from("listing-photos").getPublicUrl(p.storage_path).data
                       .publicUrl;
-                  const checked = selectedPhotoIds.has(p.id);
 
                   return (
-                    <label key={p.id} className="cursor-pointer select-none">
-                      <div
-                        className={`rounded-xl overflow-hidden bg-zinc-800 border ${
-                          checked ? "border-white" : "border-transparent"
-                        }`}
-                      >
+                    <div key={p.id} className="relative group cursor-pointer select-none">
+                      <div className="rounded-xl overflow-hidden bg-zinc-800 border border-transparent hover:border-white/50 transition-colors">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt="" className="h-28 w-full object-cover" />
+                        <img src={url} alt="" className="h-32 w-full object-cover" />
                       </div>
 
-                      <div className="mt-2 flex items-center gap-2 text-xs text-zinc-200">
+                      {idx === 0 && (
+                        <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                          Cover
+                        </div>
+                      )}
+
+                      {/* Room name badge left bottom - placeholder */}
+                      {/* <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                        Living Room
+                      </div> */}
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMenuPhotoId(p.id);
+                          setMenuOpen(true);
+                        }}
+                        className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ⋮
+                      </button>
+
+                      <div className="absolute bottom-2 left-2">
                         <input
                           type="checkbox"
-                          checked={checked}
+                          checked={selectedPhotoIds.has(p.id)}
                           onChange={(e) => {
                             const next = new Set(selectedPhotoIds);
                             if (e.target.checked) next.add(p.id);
                             else next.delete(p.id);
                             setSelectedPhotoIds(next);
                           }}
+                          className="w-4 h-4"
                         />
-                        <span>Select</span>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            openViewer(idx);
-                          }}
-                          className="ml-auto text-zinc-300 hover:text-white"
-                        >
-                          Preview
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setCover(p.id)}
-                          disabled={updatingOrder || idx === 0}
-                          className="text-zinc-300 hover:text-white disabled:opacity-50"
-                        >
-                          Cover
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => moveLeft(p.id)}
-                          disabled={updatingOrder || idx === 0}
-                          className="text-zinc-300 hover:text-white disabled:opacity-50"
-                        >
-                          ←
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => moveRight(p.id)}
-                          disabled={updatingOrder || idx === photos.length - 1}
-                          className="text-zinc-300 hover:text-white disabled:opacity-50"
-                        >
-                          →
-                        </button>
                       </div>
-                    </label>
+                    </div>
                   );
                 })}
+              </div>
+            )}
+
+            {menuOpen && menuPhotoId && (
+              <div className="mt-4 p-4 bg-zinc-800 rounded-lg">
+                <button
+                  onClick={() => { setCover(menuPhotoId); setMenuOpen(false); }}
+                  className="block w-full text-left text-white hover:bg-zinc-700 p-2 rounded"
+                >
+                  Set as cover
+                </button>
+                <button
+                  onClick={() => { alert("Coming soon"); setMenuOpen(false); }}
+                  className="block w-full text-left text-white hover:bg-zinc-700 p-2 rounded"
+                >
+                  Edit photo
+                </button>
+                <button
+                  onClick={() => { const name = prompt("Room name"); console.log(name); setMenuOpen(false); }}
+                  className="block w-full text-left text-white hover:bg-zinc-700 p-2 rounded"
+                >
+                  Edit room name
+                </button>
+                <button
+                  onClick={() => { deleteSinglePhoto(menuPhotoId); setMenuOpen(false); }}
+                  className="block w-full text-left text-red-400 hover:bg-zinc-700 p-2 rounded"
+                >
+                  Delete
+                </button>
               </div>
             )}
 
