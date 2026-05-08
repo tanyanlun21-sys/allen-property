@@ -435,7 +435,7 @@ export default function ListingsPage() {
     <main
       className="min-h-screen w-full text-white"
       style={{
-        background: "radial-gradient(circle at 18% 10%, rgba(34, 211, 238, 0.10), transparent 28%), radial-gradient(circle at 38% 38%, rgba(20, 83, 95, 0.10), transparent 34%), linear-gradient(90deg, #071012 0%, #07090C 48%, #050505 100%)",
+        background: "radial-gradient(circle at 18% 10%, rgba(34, 211, 238, 0.055), transparent 24%), radial-gradient(circle at 34% 38%, rgba(20, 83, 95, 0.04), transparent 28%), linear-gradient(90deg, #05090B 0%, #050607 52%, #040404 100%)",
       }}
     >
       <div className="mx-auto max-w-6xl px-4 py-6">
