@@ -14,9 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-black text-white">
+      <body className="min-h-screen bg-[#05070A] text-white">
         <TopNav />
-        <div className="mx-auto max-w-6xl px-4 py-6">{children}</div>
+        {children}
       </body>
     </html>
   );
