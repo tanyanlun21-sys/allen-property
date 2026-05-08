@@ -433,9 +433,8 @@ export default function ListingsPage() {
 
   return (
     <main
-      className="min-h-screen text-white bg-[#05070A]
-      bg-[linear-gradient(180deg,rgba(5,7,10,0.98),rgba(8,20,32,0.95))]
-      bg-[radial-gradient(700px_at_10%_10%,rgba(14,35,52,0.25),transparent_35%),radial-gradient(900px_at_80%_15%,rgba(17,34,59,0.16),transparent_40%)]"
+      className="min-h-screen text-white bg-[#060B14]
+      bg-[linear-gradient(180deg,rgba(6,11,20,0.96),rgba(10,18,34,0.94)),radial-gradient(560px_at_12%_12%,rgba(34,211,238,0.10),transparent_30%),radial-gradient(580px_at_70%_18%,rgba(30,64,175,0.08),transparent_40%),radial-gradient(900px_at_50%_98%,rgba(15,23,42,0.45),transparent_38%)]"
     >
       <div className="mx-auto max-w-6xl px-4 py-6">
         <div className="flex items-center justify-between gap-3">
