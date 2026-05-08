@@ -193,10 +193,6 @@ export default function ListingDetailPage() {
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [deletingPhotos, setDeletingPhotos] = useState(false);
   const [updatingOrder, setUpdatingOrder] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [menuPhotoId, setMenuPhotoId] = useState<string | null>(null);
-  const [menuTop, setMenuTop] = useState(0);
-  const [menuLeft, setMenuLeft] = useState(0);
   const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -1156,32 +1152,58 @@ export default function ListingDetailPage() {
                 <div className="text-base font-semibold text-white">Photos ({photos.length})</div>
                 <div className="text-xs text-zinc-400">Drag to reorder</div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('photo-upload')?.click()}
-                  className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-zinc-200 hover:bg-white/10"
-                >
-                  +
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setManageOpen(false)}
-                  className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-zinc-200 hover:bg-white/10"
-                >
-                  Close
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setManageOpen(false)}
+                className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-zinc-200 hover:bg-white/10"
+              >
+                Close
+              </button>
             </div>
 
             {photos.length === 0 ? (
               <div className="mt-4 text-sm text-zinc-300">No photos.</div>
             ) : (
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {photos.map((p, idx) => {
-                  const url =
-                    supabase.storage.from("listing-photos").getPublicUrl(p.storage_path).data
-                      .publicUrl;
+              <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Cover photo */}
+                {photos.length > 0 && (
+                  <div
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, photos[0].id)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, photos[0].id)}
+                    className="col-span-2 row-span-2 relative group cursor-pointer select-none rounded-lg border border-gray-200 bg-white overflow-hidden"
+                  >
+                    <img
+                      src={supabase.storage.from("listing-photos").getPublicUrl(photos[0].storage_path).data.publicUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                      Cover photo
+                    </div>
+                    <div className="absolute top-2 right-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedPhotoIds.has(photos[0].id)}
+                        onChange={(e) => {
+                          const next = new Set(selectedPhotoIds);
+                          if (e.target.checked) next.add(photos[0].id);
+                          else next.delete(photos[0].id);
+                          setSelectedPhotoIds(next);
+                        }}
+                        className="w-4 h-4"
+                      />
+                    </div>
+                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-gray-500">
+                      ••••
+                    </div>
+                  </div>
+                )}
+
+                {/* Other photos */}
+                {photos.slice(1).map((p, idx) => {
+                  const url = supabase.storage.from("listing-photos").getPublicUrl(p.storage_path).data.publicUrl;
 
                   return (
                     <div
@@ -1190,43 +1212,11 @@ export default function ListingDetailPage() {
                       onDragStart={(e) => handleDragStart(e, p.id)}
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, p.id)}
-                      className="relative group cursor-pointer select-none"
+                      className="relative group cursor-pointer select-none rounded-lg border border-gray-200 bg-white overflow-hidden"
                     >
-                      <div className="rounded-xl overflow-hidden bg-zinc-800 border border-transparent hover:border-white/50 transition-colors">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt="" className="h-32 w-full object-cover" />
-                      </div>
+                      <img src={url} alt="" className="w-full h-full object-cover aspect-square" />
 
-                      {idx === 0 && (
-                        <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                          Cover
-                        </div>
-                      )}
-
-                      {/* Room name badge left bottom - placeholder */}
-                      {/* <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                        Living Room
-                      </div> */}
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const modalRect = modalRef.current?.getBoundingClientRect();
-                          if (modalRect) {
-                            setMenuTop(rect.bottom - modalRect.top);
-                            setMenuLeft(rect.left - modalRect.left);
-                          }
-                          setMenuPhotoId(p.id);
-                          setMenuOpen(true);
-                        }}
-                        className="absolute top-2 right-2 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-gray-200 transition-opacity"
-                      >
-                        ✎
-                      </button>
-
-                      <div className="absolute bottom-2 left-2">
+                      <div className="absolute top-2 left-2">
                         <input
                           type="checkbox"
                           checked={selectedPhotoIds.has(p.id)}
@@ -1239,29 +1229,41 @@ export default function ListingDetailPage() {
                           className="w-4 h-4"
                         />
                       </div>
+
+                      <div className="absolute top-2 right-2">
+                        {/* Menu button removed, using hover action bar */}
+                      </div>
+
+                      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-gray-500">
+                        ••••
+                      </div>
+
+                      {/* Hover action bar */}
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs flex opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => setCover(p.id)}
+                          className="flex-1 py-1 hover:bg-black/70"
+                        >
+                          Set as cover
+                        </button>
+                        <button
+                          onClick={() => deleteSinglePhoto(p.id)}
+                          className="flex-1 py-1 hover:bg-black/70 text-red-400"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
-              </div>
-            )}
 
-            {menuOpen && menuPhotoId && (
-              <div
-                className="absolute z-10 bg-zinc-800 rounded-lg shadow-lg p-2 min-w-[120px]"
-                style={{ top: menuTop, left: menuLeft }}
-              >
-                <button
-                  onClick={() => { setCover(menuPhotoId); setMenuOpen(false); }}
-                  className="block w-full text-left text-white hover:bg-zinc-700 p-2 rounded text-sm"
+                {/* Add photo card */}
+                <div
+                  onClick={() => document.getElementById('photo-upload')?.click()}
+                  className="col-span-1 aspect-square rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
                 >
-                  Set as cover
-                </button>
-                <button
-                  onClick={() => { deleteSinglePhoto(menuPhotoId); setMenuOpen(false); }}
-                  className="block w-full text-left text-red-400 hover:bg-zinc-700 p-2 rounded text-sm"
-                >
-                  Delete
-                </button>
+                  <span className="text-2xl text-gray-400">+</span>
+                </div>
               </div>
             )}
 
