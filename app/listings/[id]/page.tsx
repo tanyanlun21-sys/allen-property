@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { rm } from "@/lib/money";
@@ -195,6 +195,9 @@ export default function ListingDetailPage() {
   const [updatingOrder, setUpdatingOrder] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPhotoId, setMenuPhotoId] = useState<string | null>(null);
+  const [menuTop, setMenuTop] = useState(0);
+  const [menuLeft, setMenuLeft] = useState(0);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
@@ -356,6 +359,17 @@ export default function ListingDetailPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  useEffect(() => {
+    if (manageOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [manageOpen]);
 
   const uploadPhotos = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -1118,7 +1132,8 @@ export default function ListingDetailPage() {
           onClick={() => setManageOpen(false)}
         >
           <div
-            className="w-[95vw] max-w-3xl rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+            ref={modalRef}
+            className="w-[95vw] max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -1175,6 +1190,12 @@ export default function ListingDetailPage() {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const modalRect = modalRef.current?.getBoundingClientRect();
+                          if (modalRect) {
+                            setMenuTop(rect.bottom - modalRect.top);
+                            setMenuLeft(rect.left - modalRect.left);
+                          }
                           setMenuPhotoId(p.id);
                           setMenuOpen(true);
                         }}
@@ -1203,28 +1224,31 @@ export default function ListingDetailPage() {
             )}
 
             {menuOpen && menuPhotoId && (
-              <div className="mt-4 p-4 bg-zinc-800 rounded-lg">
+              <div
+                className="absolute z-10 bg-zinc-800 rounded-lg shadow-lg p-2 min-w-[150px]"
+                style={{ top: menuTop, left: menuLeft }}
+              >
                 <button
                   onClick={() => { setCover(menuPhotoId); setMenuOpen(false); }}
-                  className="block w-full text-left text-white hover:bg-zinc-700 p-2 rounded"
+                  className="block w-full text-left text-white hover:bg-zinc-700 p-2 rounded text-sm"
                 >
                   Set as cover
                 </button>
                 <button
                   onClick={() => { alert("Coming soon"); setMenuOpen(false); }}
-                  className="block w-full text-left text-white hover:bg-zinc-700 p-2 rounded"
+                  className="block w-full text-left text-white hover:bg-zinc-700 p-2 rounded text-sm"
                 >
                   Edit photo
                 </button>
                 <button
                   onClick={() => { const name = prompt("Room name"); console.log(name); setMenuOpen(false); }}
-                  className="block w-full text-left text-white hover:bg-zinc-700 p-2 rounded"
+                  className="block w-full text-left text-white hover:bg-zinc-700 p-2 rounded text-sm"
                 >
                   Edit room name
                 </button>
                 <button
                   onClick={() => { deleteSinglePhoto(menuPhotoId); setMenuOpen(false); }}
-                  className="block w-full text-left text-red-400 hover:bg-zinc-700 p-2 rounded"
+                  className="block w-full text-left text-red-400 hover:bg-zinc-700 p-2 rounded text-sm"
                 >
                   Delete
                 </button>
