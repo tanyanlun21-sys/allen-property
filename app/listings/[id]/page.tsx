@@ -192,6 +192,7 @@ export default function ListingDetailPage() {
   const [manageOpen, setManageOpen] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [deletingPhotos, setDeletingPhotos] = useState(false);
+  const [updatingOrder, setUpdatingOrder] = useState(false);
 
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
@@ -288,6 +289,65 @@ export default function ListingDetailPage() {
     }
 
     setLoading(false);
+  };
+
+  const updatePhotoOrder = async (newPhotos: any[]) => {
+    setUpdatingOrder(true);
+    setErr(null);
+
+    const updates = newPhotos.map((p, idx) => ({
+      id: p.id,
+      sort_order: idx,
+    }));
+
+    const { error } = await supabase
+      .from("listing_photos")
+      .upsert(updates, { onConflict: "id" });
+
+    if (error) {
+      setErr(error.message);
+    } else {
+      // Reload photos
+      const { data: ph, error: phErr } = await supabase
+        .from("listing_photos")
+        .select("*")
+        .eq("listing_id", id)
+        .order("sort_order", { ascending: true });
+
+      if (phErr) {
+        setErr(phErr.message);
+        setPhotos([]);
+      } else {
+        setPhotos(ph ?? []);
+      }
+    }
+
+    setUpdatingOrder(false);
+  };
+
+  const setCover = (photoId: string) => {
+    const idx = photos.findIndex(p => p.id === photoId);
+    if (idx === -1 || idx === 0) return;
+    const newPhotos = [...photos];
+    const [removed] = newPhotos.splice(idx, 1);
+    newPhotos.unshift(removed);
+    updatePhotoOrder(newPhotos);
+  };
+
+  const moveLeft = (photoId: string) => {
+    const idx = photos.findIndex(p => p.id === photoId);
+    if (idx <= 0) return;
+    const newPhotos = [...photos];
+    [newPhotos[idx - 1], newPhotos[idx]] = [newPhotos[idx], newPhotos[idx - 1]];
+    updatePhotoOrder(newPhotos);
+  };
+
+  const moveRight = (photoId: string) => {
+    const idx = photos.findIndex(p => p.id === photoId);
+    if (idx === -1 || idx >= photos.length - 1) return;
+    const newPhotos = [...photos];
+    [newPhotos[idx], newPhotos[idx + 1]] = [newPhotos[idx + 1], newPhotos[idx]];
+    updatePhotoOrder(newPhotos);
   };
 
   useEffect(() => {
@@ -1088,6 +1148,33 @@ export default function ListingDetailPage() {
                           className="ml-auto text-zinc-300 hover:text-white"
                         >
                           Preview
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setCover(p.id)}
+                          disabled={updatingOrder || idx === 0}
+                          className="text-zinc-300 hover:text-white disabled:opacity-50"
+                        >
+                          Cover
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => moveLeft(p.id)}
+                          disabled={updatingOrder || idx === 0}
+                          className="text-zinc-300 hover:text-white disabled:opacity-50"
+                        >
+                          ←
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => moveRight(p.id)}
+                          disabled={updatingOrder || idx === photos.length - 1}
+                          className="text-zinc-300 hover:text-white disabled:opacity-50"
+                        >
+                          →
                         </button>
                       </div>
                     </label>
