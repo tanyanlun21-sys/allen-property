@@ -19,9 +19,9 @@ export default function TopNav() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-cyan-400/10 bg-gradient-to-r from-[#05070A]/95 via-[rgba(8,20,32,0.96)] to-[#05070A]/95 backdrop-blur shadow-[0_-10px_24px_rgba(34,211,238,0.08)]">
-        <div className="relative mx-auto max-w-6xl w-full px-4 py-4">
-          <nav className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-3">
+      <header className="sticky top-0 z-40 min-h-[80px] border-b border-cyan-400/10 bg-gradient-to-r from-[#05070A]/95 via-[rgba(8,20,32,0.96)] to-[#05070A]/95 backdrop-blur shadow-[0_-10px_24px_rgba(34,211,238,0.08)]">
+        <div className="w-full px-6 py-4 grid grid-cols-[1fr_auto_1fr] items-center">
+          <nav className="justify-self-start flex items-center gap-2 sm:gap-3">
             {tabs.map((t) => {
               const active = isActive(pathname, t.href);
               return (
@@ -41,17 +41,17 @@ export default function TopNav() {
             })}
           </nav>
 
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-3 text-white text-lg sm:text-xl md:text-3xl font-semibold tracking-tight topnav-brand">
+          <div className="justify-self-center flex items-center gap-3 text-white text-lg sm:text-xl md:text-3xl font-semibold tracking-tight topnav-brand">
             <span className="inline-flex rounded-full bg-amber-300/10 p-1">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2C8.13401 2 5 5.13401 5 9C5 13.25 11.5 21 12 21C12.5 21 19 13.25 19 9C19 5.13401 15.866 2 12 2Z" fill="#F6C143"/>
                 <path d="M12 6.5L8.5 10V13H11V16H13V13H15.5V10L12 6.5Z" fill="#101010"/>
               </svg>
             </span>
-            <span className="truncate max-w-[40vw] sm:max-w-[45vw] md:max-w-[32vw]">Allen Property Unit Collect</span>
+            <span>Allen Property Unit Collect</span>
           </div>
 
-          <div className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2">
+          <div className="justify-self-end pr-6">
             <button
               onClick={async () => {
                 const { supabase } = await import("@/lib/supabase");
