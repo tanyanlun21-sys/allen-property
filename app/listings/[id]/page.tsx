@@ -195,6 +195,7 @@ export default function ListingDetailPage() {
   const [updatingOrder, setUpdatingOrder] = useState(false);
   const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
@@ -422,6 +423,7 @@ export default function ListingDetailPage() {
     }
 
     await load();
+    if (inputRef.current) inputRef.current.value = '';
   };
 
   const deleteSelectedPhotos = async () => {
@@ -1147,6 +1149,14 @@ export default function ListingDetailPage() {
             className="w-[95vw] max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
             onClick={(e) => e.stopPropagation()}
           >
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => uploadPhotos(e.target.files)}
+              className="hidden"
+            />
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-base font-semibold text-white">Photos ({photos.length})</div>
@@ -1259,7 +1269,7 @@ export default function ListingDetailPage() {
 
                 {/* Add photo card */}
                 <div
-                  onClick={() => document.getElementById('photo-upload')?.click()}
+                  onClick={() => inputRef.current?.click()}
                   className="col-span-1 aspect-square rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
                 >
                   <span className="text-2xl text-gray-400">+</span>
