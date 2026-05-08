@@ -19,7 +19,7 @@ export default function TopNav() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-zinc-900 bg-gradient-to-r from-[#05070A] via-[rgba(8,20,32,0.9)] to-[#05070A] backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-cyan-400/10 bg-gradient-to-r from-[#05070A]/95 via-[rgba(8,20,32,0.96)] to-[#05070A]/95 backdrop-blur shadow-[0_-10px_24px_rgba(34,211,238,0.08)]">
         <div className="mx-auto max-w-6xl w-[96vw] px-4 py-4 relative flex items-center">
           <nav className="flex items-center gap-3">
             {tabs.map((t) => {
