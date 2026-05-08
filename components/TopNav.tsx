@@ -68,9 +68,9 @@ export default function TopNav() {
         </div>
       </header>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@700&display=swap');
         .topnav-brand {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Kalam', cursive;
         }
       `}</style>
     </>
