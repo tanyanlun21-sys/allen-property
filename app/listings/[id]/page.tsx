@@ -300,34 +300,22 @@ export default function ListingDetailPage() {
     setUpdatingOrder(true);
     setErr(null);
 
-    const updates = newPhotos.map((p, idx) => ({
-      id: p.id,
-      sort_order: idx,
-    }));
-
-    const { error } = await supabase
-      .from("listing_photos")
-      .upsert(updates, { onConflict: "id" });
-
-    if (error) {
-      setErr(error.message);
-    } else {
-      // Reload photos
-      const { data: ph, error: phErr } = await supabase
-        .from("listing_photos")
-        .select("*")
-        .eq("listing_id", id)
-        .order("sort_order", { ascending: true });
-
-      if (phErr) {
-        setErr(phErr.message);
-        setPhotos([]);
-      } else {
-        setPhotos(ph ?? []);
+    try {
+      for (const [idx, p] of newPhotos.entries()) {
+        const { error } = await supabase
+          .from("listing_photos")
+          .update({ sort_order: idx })
+          .eq("id", p.id);
+        if (error) throw error;
       }
-    }
 
-    setUpdatingOrder(false);
+      setPhotos(newPhotos);
+      await load();
+    } catch (e: any) {
+      setErr(e.message ?? "Update failed");
+    } finally {
+      setUpdatingOrder(false);
+    }
   };
 
   const setCover = (photoId: string) => {
@@ -1199,9 +1187,9 @@ export default function ListingDetailPage() {
                           setMenuPhotoId(p.id);
                           setMenuOpen(true);
                         }}
-                        className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-2 right-2 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-gray-200 transition-opacity"
                       >
-                        ⋮
+                        ✎
                       </button>
 
                       <div className="absolute bottom-2 left-2">
@@ -1225,7 +1213,7 @@ export default function ListingDetailPage() {
 
             {menuOpen && menuPhotoId && (
               <div
-                className="absolute z-10 bg-zinc-800 rounded-lg shadow-lg p-2 min-w-[150px]"
+                className="absolute z-10 bg-zinc-800 rounded-lg shadow-lg p-2 min-w-[120px]"
                 style={{ top: menuTop, left: menuLeft }}
               >
                 <button
@@ -1233,18 +1221,6 @@ export default function ListingDetailPage() {
                   className="block w-full text-left text-white hover:bg-zinc-700 p-2 rounded text-sm"
                 >
                   Set as cover
-                </button>
-                <button
-                  onClick={() => { alert("Coming soon"); setMenuOpen(false); }}
-                  className="block w-full text-left text-white hover:bg-zinc-700 p-2 rounded text-sm"
-                >
-                  Edit photo
-                </button>
-                <button
-                  onClick={() => { const name = prompt("Room name"); console.log(name); setMenuOpen(false); }}
-                  className="block w-full text-left text-white hover:bg-zinc-700 p-2 rounded text-sm"
-                >
-                  Edit room name
                 </button>
                 <button
                   onClick={() => { deleteSinglePhoto(menuPhotoId); setMenuOpen(false); }}
