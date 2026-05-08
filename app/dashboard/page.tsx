@@ -43,6 +43,7 @@ type ListingRow = {
   last_update?: string | null; // timestamp/string
   last_contact?: string | null;
   next_follow_up?: string | null; // date or timestamp
+  available_from?: string | null;
   priority?: number | null;
 
   updated_at: string;
@@ -147,7 +148,7 @@ export default function DashboardPage() {
       const { data: ls, error: lsErr } = await supabase
         .from("listings")
         .select(
-          "id,user_id,type,status,condo_name,area,price,sqft,bedrooms,bathrooms,carparks,furnish,inbox,last_update,last_contact,next_follow_up,priority,updated_at"
+          "id,user_id,type,status,condo_name,area,price,sqft,bedrooms,bathrooms,carparks,furnish,inbox,last_update,last_contact,next_follow_up,available_from,priority,updated_at"
         )
         .eq("user_id", userId)
         .order("updated_at", { ascending: false });
@@ -200,6 +201,22 @@ export default function DashboardPage() {
       .filter((x) => !!x.inbox)
       .sort((a, b) => (safeNum(b.priority) - safeNum(a.priority)) || (b.updated_at.localeCompare(a.updated_at)));
   }, [filteredListings]);
+
+  const upcomingAvailable = useMemo(() => {
+    const today = parseDateAny(todayISO);
+    if (!today) return [];
+
+    return filteredListings
+      .filter((x) => {
+        const avail = parseDateAny(x.available_from ?? null);
+        return avail ? avail.getTime() > today.getTime() : false;
+      })
+      .sort((a, b) => {
+        const da = parseDateAny(a.available_from ?? null)?.getTime() ?? Infinity;
+        const db = parseDateAny(b.available_from ?? null)?.getTime() ?? Infinity;
+        return da - db;
+      });
+  }, [filteredListings, todayISO]);
 
   const followUpsDue = useMemo(() => {
     // next_follow_up <= today (到期/逾期)
@@ -456,67 +473,51 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
           <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
           shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div>
-              <div className="text-base font-semibold">🆕 Inbox</div>
-              <div className="text-sm text-zinc-400">新房源先收进来，之后再整理</div>
+              <div className="text-base font-semibold">Available Soon</div>
+              <div className="text-sm text-zinc-400">Units with future available dates</div>
             </div>
 
             {loading ? (
               <div className="mt-4 text-sm text-zinc-400">Loading…</div>
-            ) : inboxList.length === 0 ? (
-              <div className="mt-4 text-sm text-zinc-300">Inbox 为空。✅</div>
+            ) : upcomingAvailable.length === 0 ? (
+              <div className="mt-4 text-sm text-zinc-300">No upcoming available units.</div>
             ) : (
               <div className="mt-4 space-y-3">
-                {inboxList.slice(0, 10).map((x) => (
-                  <div key={x.id} className="rounded-xl bg-zinc-950 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold line-clamp-1">{x.condo_name}</div>
-                        <div className="text-xs text-zinc-400 line-clamp-1">{x.area ?? "—"}</div>
+                {upcomingAvailable.slice(0, 10).map((x) => {
+                  const availDate = parseDateAny(x.available_from ?? null);
+                  const days = availDate ? daysBetween(parseDateAny(todayISO)!, availDate) : null;
+                  return (
+                    <div key={x.id} className="rounded-xl bg-zinc-950 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold line-clamp-1">{x.condo_name}</div>
+                          <div className="text-xs text-zinc-400 line-clamp-1">{x.area ?? "—"}</div>
 
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-200">
-                            {x.type.toUpperCase()}
-                          </span>
-                          <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-200">
-                            P{safeNum(x.priority) || 0}
-                          </span>
-                          {x.furnish ? (
+                          <div className="mt-2 flex flex-wrap gap-2">
                             <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-200">
-                              {x.furnish}
+                              {String(x.status)}
                             </span>
-                          ) : null}
+                            <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-200">
+                              {availDate ? toISODate(availDate) : "Unknown"}
+                            </span>
+                            {days !== null ? (
+                              <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-cyan-200">
+                                Available in {days} day{days === 1 ? "" : "s"}
+                              </span>
+                            ) : null}
+                          </div>
                         </div>
 
-                        <div className="mt-2 text-sm text-white">
-                          {x.price != null ? rm(x.price) : "—"}
-                          <span className="ml-2 text-xs text-zinc-500">
-                            {x.type === "rent" ? "/ mo" : ""}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-2">
                         <a
                           href={`/listings/${x.id}`}
                           className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-zinc-200 hover:bg-white/10 text-center"
                         >
                           Open
                         </a>
-                        <button
-                          type="button"
-                          onClick={() => markProcessed(x.id)}
-                          className="rounded-lg px-4 py-2 text-sm font-semibold text-black
-bg-cyan-400 hover:bg-cyan-300
-shadow-[0_10px_30px_rgba(34,211,238,0.35)]
-transition-all duration-150
-active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
-                        >
-                          Mark processed
-                        </button>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
