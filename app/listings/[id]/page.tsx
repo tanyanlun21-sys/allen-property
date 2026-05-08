@@ -197,6 +197,7 @@ export default function ListingDetailPage() {
   const [menuPhotoId, setMenuPhotoId] = useState<string | null>(null);
   const [menuTop, setMenuTop] = useState(0);
   const [menuLeft, setMenuLeft] = useState(0);
+  const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -310,7 +311,7 @@ export default function ListingDetailPage() {
       }
 
       setPhotos(newPhotos);
-      await load();
+      // await load(); // Remove to avoid full reload
     } catch (e: any) {
       setErr(e.message ?? "Update failed");
     } finally {
@@ -318,13 +319,39 @@ export default function ListingDetailPage() {
     }
   };
 
-  const setCover = (photoId: string) => {
+  const setCover = async (photoId: string) => {
     const idx = photos.findIndex(p => p.id === photoId);
     if (idx === -1 || idx === 0) return;
     const newPhotos = [...photos];
     const [removed] = newPhotos.splice(idx, 1);
     newPhotos.unshift(removed);
+    setPhotos(newPhotos);
     updatePhotoOrder(newPhotos);
+  };
+
+  const handleDragStart = (e: React.DragEvent, photoId: string) => {
+    setDraggedPhotoId(photoId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetPhotoId: string) => {
+    e.preventDefault();
+    if (!draggedPhotoId || draggedPhotoId === targetPhotoId) return;
+
+    const draggedIdx = photos.findIndex(p => p.id === draggedPhotoId);
+    const targetIdx = photos.findIndex(p => p.id === targetPhotoId);
+    if (draggedIdx === -1 || targetIdx === -1) return;
+
+    const newPhotos = [...photos];
+    const [removed] = newPhotos.splice(draggedIdx, 1);
+    newPhotos.splice(targetIdx, 0, removed);
+
+    setPhotos(newPhotos);
+    updatePhotoOrder(newPhotos);
+    setDraggedPhotoId(null);
   };
 
   const moveLeft = (photoId: string) => {
@@ -1157,7 +1184,14 @@ export default function ListingDetailPage() {
                       .publicUrl;
 
                   return (
-                    <div key={p.id} className="relative group cursor-pointer select-none">
+                    <div
+                      key={p.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, p.id)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, p.id)}
+                      className="relative group cursor-pointer select-none"
+                    >
                       <div className="rounded-xl overflow-hidden bg-zinc-800 border border-transparent hover:border-white/50 transition-colors">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={url} alt="" className="h-32 w-full object-cover" />
