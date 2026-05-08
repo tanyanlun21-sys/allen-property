@@ -374,9 +374,9 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
 
           <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
           shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
-            <div className="text-xs text-zinc-400">Inbox</div>
-            <div className="mt-2 text-3xl font-semibold">{inboxList.length}</div>
-            <div className="mt-2 text-xs text-zinc-500">Need processing</div>
+            <div className="text-xs text-zinc-400">Available soon</div>
+            <div className="mt-2 text-3xl font-semibold">{upcomingAvailable.length}</div>
+            <div className="mt-2 text-xs text-zinc-500">Units with future available dates</div>
           </div>
 
           <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
