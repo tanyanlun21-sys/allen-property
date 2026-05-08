@@ -297,8 +297,8 @@ export default function DashboardPage() {
 
   return (
     <main
-  className="min-h-screen text-white bg-[#07111E]
-  bg-[linear-gradient(180deg,rgba(6,8,14,0.96),rgba(10,20,32,0.94))]
+  className="min-h-screen text-white bg-[#05070A]
+  bg-[linear-gradient(180deg,rgba(5,7,10,0.98),rgba(8,20,32,0.95))]
   bg-[radial-gradient(700px_at_10%_10%,rgba(14,35,52,0.25),transparent_35%),radial-gradient(900px_at_80%_15%,rgba(17,34,59,0.16),transparent_40%)]"
 >
       <div className="mx-auto max-w-6xl px-4 py-6">
