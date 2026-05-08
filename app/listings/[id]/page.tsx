@@ -1146,7 +1146,7 @@ export default function ListingDetailPage() {
         >
           <div
             ref={modalRef}
-            className="w-[95vw] max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+            className="w-[96vw] max-w-7xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
             onClick={(e) => e.stopPropagation()}
           >
             <input
@@ -1174,7 +1174,7 @@ export default function ListingDetailPage() {
             {photos.length === 0 ? (
               <div className="mt-4 text-sm text-zinc-300">No photos.</div>
             ) : (
-              <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="mt-4 grid grid-cols-2 md:grid-cols-6 gap-4">
                 {/* Cover photo */}
                 {photos.length > 0 && (
                   <div
