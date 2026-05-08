@@ -297,8 +297,9 @@ export default function DashboardPage() {
 
   return (
     <main
-  className="min-h-screen text-white bg-[#06070A]
-  bg-[radial-gradient(800px_circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(600px_circle_at_80%_30%,rgba(59,130,246,0.10),transparent_40%),radial-gradient(900px_circle_at_50%_90%,rgba(168,85,247,0.08),transparent_45%)]"
+  className="min-h-screen text-white bg-[#07111E]
+  bg-[linear-gradient(180deg,rgba(6,8,14,0.96),rgba(10,20,32,0.94))]
+  bg-[radial-gradient(700px_at_10%_10%,rgba(14,35,52,0.25),transparent_35%),radial-gradient(900px_at_80%_15%,rgba(17,34,59,0.16),transparent_40%)]"
 >
       <div className="mx-auto max-w-6xl px-4 py-6">
         {/* Header */}

@@ -216,8 +216,9 @@ export default function IncomePage() {
 
   return (
     <main
-      className="min-h-screen text-white bg-[#050505]
-      bg-[radial-gradient(900px_circle_at_20%_10%,rgba(212,175,55,0.16),transparent_45%),radial-gradient(700px_circle_at_80%_30%,rgba(255,215,0,0.10),transparent_50%)]"
+      className="min-h-screen text-white bg-[#090906]
+      bg-[linear-gradient(180deg,rgba(9,9,6,0.97),rgba(12,10,8,0.93))]
+      bg-[radial-gradient(600px_at_12%_12%,rgba(212,175,55,0.10),transparent_32%),radial-gradient(760px_at_80%_18%,rgba(212,175,55,0.08),transparent_40%),radial-gradient(900px_at_50%_98%,rgba(4,4,6,0.55),transparent_38%)]"
     >
       <div className="mx-auto max-w-6xl px-4 py-6">
         <div className="flex items-center justify-between gap-3">
