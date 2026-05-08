@@ -68,6 +68,7 @@ export default function PhotoCarousel({ urls }: { urls: string[] }) {
           <button
             type="button"
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               prev();
             }}
@@ -79,6 +80,7 @@ export default function PhotoCarousel({ urls }: { urls: string[] }) {
           <button
             type="button"
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               next();
             }}
