@@ -180,6 +180,25 @@ export default function NewListingPage() {
           />
 
           <div className="grid grid-cols-2 gap-3">
+            <input
+              type="number"
+              inputMode="numeric"
+              className="rounded-lg bg-zinc-800 px-3 py-2"
+              placeholder="Sqft"
+              value={form.sqft}
+              onChange={(e) => setForm((f) => ({ ...f, sqft: e.target.value }))}
+            />
+            <input
+              type="number"
+              inputMode="numeric"
+              className="rounded-lg bg-zinc-800 px-3 py-2"
+              placeholder={form.type === "rent" ? "Rent (RM)" : "Price (RM)"}
+              value={form.price}
+              onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div className="grid grid-cols-[1fr_auto] gap-2">
               <input
                 type={form.is_studio ? "text" : "number"}
