@@ -644,7 +644,8 @@ export default function ListingsPage() {
           </a>
         </div>
 
-        <div className="mt-5 group relative">
+        <div className="sticky top-[132px] sm:top-[92px] z-30 mt-5 rounded-2xl border border-white/10 bg-[#05090B]/80 p-3 shadow-[0_16px_50px_rgba(0,0,0,0.42)] backdrop-blur-xl">
+          <div className="group relative">
           <div className="pointer-events-none absolute left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-white/70 bg-white/95 text-zinc-950 shadow-sm transition group-hover:bg-zinc-200">
             <svg
               aria-hidden="true"
@@ -669,7 +670,7 @@ export default function ListingsPage() {
           />
         </div>
 
-        <div className="mt-5 flex flex-wrap items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <div className="flex rounded-lg bg-white/5 border border-white/10 backdrop-blur p-1
           shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             {(
@@ -777,6 +778,7 @@ export default function ListingsPage() {
             <div className="ml-auto text-xs text-zinc-500">—</div>
           )}
         </div>
+        </div>
 
         {loading ? (
           <div className="mt-6 text-sm text-zinc-400">Loading…</div>
