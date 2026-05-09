@@ -644,14 +644,14 @@ export default function ListingsPage() {
         </div>
 
         <div className="mt-5 group relative">
-          <div className="pointer-events-none absolute left-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-white/10 bg-white/8 text-zinc-200 transition group-hover:bg-black/35 group-hover:text-white">
+          <div className="pointer-events-none absolute left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-white/70 bg-white/95 text-zinc-950 shadow-sm transition group-hover:bg-zinc-200">
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
               className="h-4 w-4"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2.2"
+              strokeWidth="2.3"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
