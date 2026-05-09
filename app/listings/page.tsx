@@ -803,9 +803,9 @@ export default function ListingsPage() {
                     <button
                       type="button"
                       onClick={() => rentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                      className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-white backdrop-blur-xl transition hover:bg-cyan-300/15"
+                      className="inline-flex items-center gap-1 rounded-xl border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-white backdrop-blur-xl transition hover:bg-cyan-300/15"
                     >
-                      Rent ?
+                      Rent <span aria-hidden="true">&darr;</span>
                     </button>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
