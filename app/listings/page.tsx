@@ -129,6 +129,15 @@ export default function ListingsPage() {
 
   // Filter Modal
   const [filterModalOpen, setFilterModalOpen] = useState(false);
+  useEffect(() => {
+    if (!filterModalOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow || "";
+    };
+  }, [filterModalOpen]);
+
   const [filterTab, setFilterTab] = useState<"price" | "bedroom">("price");
   const [priceMinInput, setPriceMinInput] = useState<string>("");
   const [priceMaxInput, setPriceMaxInput] = useState<string>("");
@@ -767,7 +776,7 @@ export default function ListingsPage() {
               const followUps = filtered.filter(x => x.status === "Follow-up");
               if (followUps.length === 0) return null;
               return (
-                <div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.28)] p-5">
                   <div
                     className="text-lg font-semibold mb-4"
                     style={{ color: '#22D3EE', textShadow: '0 0 14px rgba(34,211,238,0.8)' }}
@@ -785,7 +794,7 @@ export default function ListingsPage() {
               const rents = filtered.filter(x => x.type === "rent" && x.status !== "Follow-up");
               if (rents.length === 0) return null;
               return (
-                <div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.28)] p-5">
                   <div
                     className="text-lg font-semibold mb-4"
                     style={{ color: '#22C55E', textShadow: '0 0 14px rgba(34,197,94,0.8)' }}
@@ -803,7 +812,7 @@ export default function ListingsPage() {
               const sales = filtered.filter(x => x.type === "sale" && x.status !== "Follow-up");
               if (sales.length === 0) return null;
               return (
-                <div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.28)] p-5">
                   <div
                     className="text-lg font-semibold mb-4"
                     style={{ color: '#FFD36A', textShadow: '0 0 14px rgba(255,211,106,0.8)' }}
