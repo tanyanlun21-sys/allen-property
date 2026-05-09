@@ -644,7 +644,7 @@ export default function ListingsPage() {
           </a>
         </div>
 
-        <div className="sticky top-[132px] sm:top-[92px] z-30 mt-5 rounded-2xl border border-white/10 bg-[#05090B]/80 p-3 shadow-[0_16px_50px_rgba(0,0,0,0.42)] backdrop-blur-xl">
+        <div className="sticky top-[132px] sm:top-[92px] z-30 mt-5 bg-[#05090B]/70 py-2 backdrop-blur-xl">
           <div className="group relative">
           <div className="pointer-events-none absolute left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-white/70 bg-white/95 text-zinc-950 shadow-sm transition group-hover:bg-zinc-200">
             <svg
@@ -771,11 +771,11 @@ export default function ListingsPage() {
           </button>
 
           {counts.dueCount > 0 ? (
-            <div className="ml-auto rounded-lg bg-amber-900/30 px-3 py-2 text-xs text-amber-200">
+            <div className="rounded-lg bg-amber-900/30 px-3 py-2 text-xs text-amber-200 sm:ml-auto">
               {counts.dueCount} follow-up due
             </div>
           ) : (
-            <div className="ml-auto text-xs text-zinc-500">—</div>
+            <div className="text-xs text-zinc-500 sm:ml-auto">—</div>
           )}
         </div>
         </div>
