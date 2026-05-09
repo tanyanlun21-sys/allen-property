@@ -1141,7 +1141,7 @@ export default function ListingDetailPage() {
       {/* �?Manage modal：勾选要删的照片 */}
       {manageOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center overscroll-contain touch-none"
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center overflow-hidden overscroll-contain"
           onClick={() => setManageOpen(false)}
         >
           <div
@@ -1312,7 +1312,7 @@ export default function ListingDetailPage() {
       {/* Show all media modal */}
       {showAllOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center overscroll-contain touch-none"
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center overflow-hidden overscroll-contain"
           onClick={() => setShowAllOpen(false)}
         >
           <div
