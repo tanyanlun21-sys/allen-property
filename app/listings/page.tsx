@@ -763,7 +763,7 @@ export default function ListingsPage() {
                 <div>
                   <div
                     className="text-lg font-semibold mb-4"
-                    style={{ color: '#FFD36A', textShadow: '0 0 14px rgba(255,211,106,0.8)' }}
+                    style={{ color: '#22D3EE', textShadow: '0 0 14px rgba(34,211,238,0.8)' }}
                   >
                     Follow-up ({followUps.length})
                   </div>
@@ -799,7 +799,7 @@ export default function ListingsPage() {
                 <div>
                   <div
                     className="text-lg font-semibold mb-4"
-                    style={{ color: '#22D3EE', textShadow: '0 0 14px rgba(34,211,238,0.8)' }}
+                    style={{ color: '#FFD36A', textShadow: '0 0 14px rgba(255,211,106,0.8)' }}
                   >
                     Sale ({sales.length})
                   </div>
