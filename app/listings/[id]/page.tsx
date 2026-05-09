@@ -373,15 +373,31 @@ export default function ListingDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    if (manageOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    const shouldLock = manageOpen || showAllOpen || viewerOpen;
+    if (!shouldLock) return;
+
+    const scrollY = window.scrollY;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousPosition = document.body.style.position;
+    const previousTop = document.body.style.top;
+    const previousWidth = document.body.style.width;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+
     return () => {
-      document.body.style.overflow = '';
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.position = previousPosition;
+      document.body.style.top = previousTop;
+      document.body.style.width = previousWidth;
+      window.scrollTo(0, scrollY);
     };
-  }, [manageOpen]);
+  }, [manageOpen, showAllOpen, viewerOpen]);
 
   const uploadPhotos = async (files: FileList | null) => {
     if (!files || files.length === 0) return;

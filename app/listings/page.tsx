@@ -793,11 +793,20 @@ export default function ListingsPage() {
               if (followUps.length === 0) return null;
               return (
                 <div className="space-y-4">
-                  <div
+                  <div className="mb-4 flex flex-wrap items-center gap-2">
+                    <div
                     className="mb-4 inline-flex items-center rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-lg font-semibold backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.24)]"
                     style={{ color: '#22D3EE', textShadow: '0 0 14px rgba(34,211,238,0.8)' }}
                   >
                     Follow-up ({followUps.length})
+                  </div>
+                    <button
+                      type="button"
+                      onClick={() => rentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                      className="rounded-xl border border-cyan-400/20 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-cyan-100 backdrop-blur-xl transition hover:bg-zinc-800 hover:text-white"
+                    >
+                      Rent
+                    </button>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {followUps.map((x) => renderCard(x))}
@@ -810,7 +819,7 @@ export default function ListingsPage() {
               const rents = filtered.filter(x => x.type === "rent" && x.status !== "Follow-up");
               if (rents.length === 0) return null;
               return (
-                <div className="space-y-4">
+                <div ref={rentSectionRef} className="space-y-4 scroll-mt-28">
                   <div
                     className="mb-4 inline-flex items-center rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-lg font-semibold backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.24)]"
                     style={{ color: '#22C55E', textShadow: '0 0 14px rgba(34,197,94,0.8)' }}
