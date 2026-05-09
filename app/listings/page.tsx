@@ -346,35 +346,36 @@ export default function ListingsPage() {
       <>
         {/* Modal backdrop */}
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
           onClick={() => setFilterModalOpen(false)}
         />
 
         {/* Modal */}
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-2xl overflow-hidden
-          bg-white shadow-2xl
-          flex flex-col max-h-[90vh]">
+          <div className="w-full max-w-md rounded-3xl overflow-hidden
+          bg-[#0a0e13]/95 border border-white/10
+          flex flex-col max-h-[85vh]
+          shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
             {/* Header */}
-            <div className="bg-zinc-900 text-white px-6 py-4 flex items-center justify-between border-b border-zinc-800">
-              <h2 className="text-lg font-semibold">Filters</h2>
+            <div className="bg-[#0f1219]/80 text-white px-6 py-4 flex items-center justify-between border-b border-white/5">
+              <h2 className="text-lg font-bold tracking-tight">Filters</h2>
               <button
                 onClick={() => setFilterModalOpen(false)}
-                className="text-zinc-400 hover:text-white transition"
+                className="text-zinc-500 hover:text-white transition duration-200"
               >
                 ✕
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="bg-zinc-800 flex border-b border-zinc-700">
+            <div className="bg-[#0a0e13]/50 flex border-b border-white/5 px-2 py-2 gap-1">
               {(["price", "bedroom"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setFilterTab(tab)}
-                  className={`flex-1 px-4 py-3 text-sm font-medium transition ${
+                  className={`flex-1 px-4 py-2 text-sm font-medium transition duration-200 rounded-lg ${
                     filterTab === tab
-                      ? "text-cyan-400 border-b-2 border-cyan-400 bg-zinc-900/50"
+                      ? "text-white bg-white/8 border-b-2 border-cyan-400/70"
                       : "text-zinc-400 hover:text-zinc-200"
                   }`}
                 >
@@ -384,39 +385,45 @@ export default function ListingsPage() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto bg-white px-6 py-6">
+            <div className="flex-1 overflow-y-auto bg-[#0a0e13] px-6 py-5">
               {filterTab === "price" && (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-900 mb-2">
-                      Minimum Price (RM)
-                    </label>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+                        Minimum Price
+                      </label>
+                      <span className="text-xs text-zinc-500 font-medium">RM</span>
+                    </div>
                     <input
                       type="number"
-                      placeholder="Min"
+                      placeholder="0"
                       value={priceMinInput}
                       onChange={(e) => setPriceMinInput(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition"
+                      className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 outline-none transition"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-zinc-900 mb-2">
-                      Maximum Price (RM)
-                    </label>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+                        Maximum Price
+                      </label>
+                      <span className="text-xs text-zinc-500 font-medium">RM</span>
+                    </div>
                     <input
                       type="number"
-                      placeholder="Max"
+                      placeholder="999999"
                       value={priceMaxInput}
                       onChange={(e) => setPriceMaxInput(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition"
+                      className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 outline-none transition"
                     />
                   </div>
                 </div>
               )}
 
               {filterTab === "bedroom" && (
-                <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   {[
                     { label: "Studio", value: 0 },
                     { label: "1", value: 1 },
@@ -428,13 +435,13 @@ export default function ListingsPage() {
                     <button
                       key={value}
                       onClick={() => toggleBedroom(value)}
-                      className={`w-full text-left px-4 py-3 rounded-lg border-2 text-sm font-medium transition ${
+                      className={`py-2.5 px-3 rounded-lg text-sm font-medium transition duration-200 ${
                         bedroomFilter.has(value)
-                          ? "border-cyan-400 bg-cyan-50 text-cyan-900"
-                          : "border-zinc-300 bg-white text-zinc-900 hover:border-zinc-400"
+                          ? "bg-cyan-500/20 border border-cyan-400/60 text-cyan-200 shadow-[0_0_16px_rgba(34,211,238,0.25)]"
+                          : "bg-white/5 border border-white/10 text-zinc-300 hover:bg-white/8 hover:border-white/20"
                       }`}
                     >
-                      {label} Bedroom{label !== "1" ? "s" : ""}
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -442,16 +449,16 @@ export default function ListingsPage() {
             </div>
 
             {/* Footer */}
-            <div className="bg-zinc-100 border-t border-zinc-300 px-6 py-4 flex gap-3">
+            <div className="bg-[#0f1219]/50 border-t border-white/5 px-6 py-4 flex gap-3">
               <button
                 onClick={handleClearFilters}
-                className="flex-1 rounded-lg px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 hover:bg-zinc-50 transition"
+                className="flex-1 rounded-xl px-4 py-2.5 text-sm font-medium text-zinc-300 bg-white/5 border border-white/10 hover:bg-white/8 hover:border-white/15 transition duration-200"
               >
                 Clear
               </button>
               <button
                 onClick={handleApplyFilters}
-                className="flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-black bg-cyan-400 hover:bg-cyan-300 transition shadow-lg"
+                className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-black bg-cyan-400 hover:bg-cyan-300 transition duration-200 shadow-[0_0_20px_rgba(34,211,238,0.3)]"
               >
                 Apply
               </button>
