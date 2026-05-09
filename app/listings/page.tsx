@@ -643,13 +643,24 @@ export default function ListingsPage() {
           </a>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-5 group relative">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 transition group-hover:text-zinc-500"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
           <input
             type="text"
             placeholder="Search condo name, area, WhatsApp, remark..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg bg-white/5 border border-white/10 backdrop-blur px-4 py-3 text-sm text-white placeholder-zinc-400 outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/25 transition"
+            className="w-full rounded-lg border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white placeholder-zinc-400 outline-none backdrop-blur transition hover:bg-black/25 hover:border-white/15 focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/25"
           />
         </div>
 
@@ -776,9 +787,9 @@ export default function ListingsPage() {
               const followUps = filtered.filter(x => x.status === "Follow-up");
               if (followUps.length === 0) return null;
               return (
-                <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.28)] p-5">
+                <div className="space-y-4">
                   <div
-                    className="text-lg font-semibold mb-4"
+                    className="mb-4 inline-flex items-center rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-lg font-semibold backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.24)]"
                     style={{ color: '#22D3EE', textShadow: '0 0 14px rgba(34,211,238,0.8)' }}
                   >
                     Follow-up ({followUps.length})
@@ -794,9 +805,9 @@ export default function ListingsPage() {
               const rents = filtered.filter(x => x.type === "rent" && x.status !== "Follow-up");
               if (rents.length === 0) return null;
               return (
-                <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.28)] p-5">
+                <div className="space-y-4">
                   <div
-                    className="text-lg font-semibold mb-4"
+                    className="mb-4 inline-flex items-center rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-lg font-semibold backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.24)]"
                     style={{ color: '#22C55E', textShadow: '0 0 14px rgba(34,197,94,0.8)' }}
                   >
                     Rent ({rents.length})
@@ -812,9 +823,9 @@ export default function ListingsPage() {
               const sales = filtered.filter(x => x.type === "sale" && x.status !== "Follow-up");
               if (sales.length === 0) return null;
               return (
-                <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.28)] p-5">
+                <div className="space-y-4">
                   <div
-                    className="text-lg font-semibold mb-4"
+                    className="mb-4 inline-flex items-center rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-lg font-semibold backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.24)]"
                     style={{ color: '#FFD36A', textShadow: '0 0 14px rgba(255,211,106,0.8)' }}
                   >
                     Sale ({sales.length})
