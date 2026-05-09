@@ -644,23 +644,27 @@ export default function ListingsPage() {
         </div>
 
         <div className="mt-5 group relative">
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 transition group-hover:text-zinc-500"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
+          <div className="pointer-events-none absolute left-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-white/10 bg-white/8 text-zinc-200 transition group-hover:bg-black/35 group-hover:text-white">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+          </div>
           <input
             type="text"
             placeholder="Search condo name, area, WhatsApp, remark..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white placeholder-zinc-400 outline-none backdrop-blur transition hover:bg-black/25 hover:border-white/15 focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/25"
+            className="w-full rounded-lg border border-white/10 bg-white/5 py-3 pl-14 pr-4 text-sm text-white placeholder-zinc-400 outline-none backdrop-blur transition hover:border-white/20 hover:bg-zinc-900/80 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/25"
           />
         </div>
 
