@@ -803,7 +803,7 @@ export default function ListingsPage() {
                     <button
                       type="button"
                       onClick={() => rentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                      className="inline-flex items-center gap-1 rounded-xl border border-cyan-200/15 bg-cyan-200/[0.055] px-3 py-2 text-sm font-semibold text-white/90 backdrop-blur-xl shadow-[0_0_14px_rgba(103,232,249,0.10)] transition hover:border-cyan-200/25 hover:bg-cyan-200/[0.08] hover:shadow-[0_0_18px_rgba(103,232,249,0.16)]"
+                      className="inline-flex items-center gap-1 rounded-xl border border-cyan-200/15 bg-cyan-200/[0.055] px-3 py-2 text-sm font-semibold text-emerald-300 backdrop-blur-xl shadow-[0_0_14px_rgba(103,232,249,0.10)] transition hover:border-cyan-200/25 hover:bg-cyan-200/[0.08] hover:shadow-[0_0_18px_rgba(103,232,249,0.16)]"
                     >
                       Rent <span aria-hidden="true">&darr;</span>
                     </button>
