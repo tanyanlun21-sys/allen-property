@@ -127,6 +127,15 @@ export default function ListingsPage() {
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  // Filter Modal
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [filterTab, setFilterTab] = useState<"price" | "bedroom">("price");
+  const [priceMinInput, setPriceMinInput] = useState<string>("");
+  const [priceMaxInput, setPriceMaxInput] = useState<string>("");
+  const [bedroomFilter, setBedroomFilter] = useState<Set<number>>(new Set());
+  const [priceMin, setPriceMin] = useState<number | null>(null);
+  const [priceMax, setPriceMax] = useState<number | null>(null);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       const id = data.user?.id ?? null;
@@ -228,7 +237,19 @@ export default function ListingsPage() {
       const matchesSearch =
         terms.length === 0 || terms.every((term) => searchable.includes(term));
 
-      return okView && okType && okStatus && matchesSearch;
+      // Price filter
+      const okPrice =
+        (priceMin === null || (x.price !== null && x.price >= priceMin)) &&
+        (priceMax === null || (x.price !== null && x.price <= priceMax));
+
+      // Bedroom filter
+      const okBedroom =
+        bedroomFilter.size === 0 ||
+        (x.bedrooms !== null &&
+          (bedroomFilter.has(x.bedrooms) ||
+            (bedroomFilter.has(5) && x.bedrooms >= 5)));
+
+      return okView && okType && okStatus && matchesSearch && okPrice && okBedroom;
     });
 
     const followUps = base.filter(x => x.status === "Follow-up");
@@ -238,7 +259,7 @@ export default function ListingsPage() {
     const sortByTime = (arr: WorkListing[]) => arr.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
     return [...sortByTime(followUps), ...sortByTime(rents), ...sortByTime(sales)];
-  }, [items, viewTab, typeTab, status, search]);
+  }, [items, viewTab, typeTab, status, search, priceMin, priceMax, bedroomFilter]);
 
   const markProcessed = async (id: string) => {
     setBusyId(id);
@@ -286,6 +307,159 @@ export default function ListingsPage() {
     }
 
     setBusyId(null);
+  };
+
+  const hasActiveFilter = priceMin !== null || priceMax !== null || bedroomFilter.size > 0;
+  const activeFilterCount = (priceMin !== null ? 1 : 0) + (priceMax !== null ? 1 : 0) + (bedroomFilter.size > 0 ? 1 : 0);
+
+  const handleApplyFilters = () => {
+    const min = priceMinInput.trim() ? parseInt(priceMinInput, 10) : null;
+    const max = priceMaxInput.trim() ? parseInt(priceMaxInput, 10) : null;
+    setPriceMin(Number.isNaN(min) ? null : min);
+    setPriceMax(Number.isNaN(max) ? null : max);
+    // bedroomFilter is already updated via toggle
+    setFilterModalOpen(false);
+  };
+
+  const handleClearFilters = () => {
+    setPriceMinInput("");
+    setPriceMaxInput("");
+    setPriceMin(null);
+    setPriceMax(null);
+    setBedroomFilter(new Set());
+  };
+
+  const toggleBedroom = (value: number) => {
+    const newSet = new Set(bedroomFilter);
+    if (newSet.has(value)) {
+      newSet.delete(value);
+    } else {
+      newSet.add(value);
+    }
+    setBedroomFilter(newSet);
+  };
+
+  const renderFilterModal = () => {
+    if (!filterModalOpen) return null;
+
+    return (
+      <>
+        {/* Modal backdrop */}
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={() => setFilterModalOpen(false)}
+        />
+
+        {/* Modal */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl overflow-hidden
+          bg-white shadow-2xl
+          flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="bg-zinc-900 text-white px-6 py-4 flex items-center justify-between border-b border-zinc-800">
+              <h2 className="text-lg font-semibold">Filters</h2>
+              <button
+                onClick={() => setFilterModalOpen(false)}
+                className="text-zinc-400 hover:text-white transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="bg-zinc-800 flex border-b border-zinc-700">
+              {(["price", "bedroom"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setFilterTab(tab)}
+                  className={`flex-1 px-4 py-3 text-sm font-medium transition ${
+                    filterTab === tab
+                      ? "text-cyan-400 border-b-2 border-cyan-400 bg-zinc-900/50"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  {tab === "price" ? "Price" : "Bedroom"}
+                </button>
+              ))}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto bg-white px-6 py-6">
+              {filterTab === "price" && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900 mb-2">
+                      Minimum Price (RM)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={priceMinInput}
+                      onChange={(e) => setPriceMinInput(e.target.value)}
+                      className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900 mb-2">
+                      Maximum Price (RM)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={priceMaxInput}
+                      onChange={(e) => setPriceMaxInput(e.target.value)}
+                      className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {filterTab === "bedroom" && (
+                <div className="space-y-3">
+                  {[
+                    { label: "Studio", value: 0 },
+                    { label: "1", value: 1 },
+                    { label: "2", value: 2 },
+                    { label: "3", value: 3 },
+                    { label: "4", value: 4 },
+                    { label: "5+", value: 5 },
+                  ].map(({ label, value }) => (
+                    <button
+                      key={value}
+                      onClick={() => toggleBedroom(value)}
+                      className={`w-full text-left px-4 py-3 rounded-lg border-2 text-sm font-medium transition ${
+                        bedroomFilter.has(value)
+                          ? "border-cyan-400 bg-cyan-50 text-cyan-900"
+                          : "border-zinc-300 bg-white text-zinc-900 hover:border-zinc-400"
+                      }`}
+                    >
+                      {label} Bedroom{label !== "1" ? "s" : ""}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="bg-zinc-100 border-t border-zinc-300 px-6 py-4 flex gap-3">
+              <button
+                onClick={handleClearFilters}
+                className="flex-1 rounded-lg px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 hover:bg-zinc-50 transition"
+              >
+                Clear
+              </button>
+              <button
+                onClick={handleApplyFilters}
+                className="flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-black bg-cyan-400 hover:bg-cyan-300 transition shadow-lg"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
   };
 
   const renderCard = (x: WorkListing) => {
@@ -544,6 +718,18 @@ export default function ListingsPage() {
           </div>
 
           <button
+            onClick={() => setFilterModalOpen(true)}
+            className={`flex items-center gap-2 rounded-lg backdrop-blur px-3 py-2 text-sm transition ${
+              hasActiveFilter
+                ? "bg-cyan-400/20 border border-cyan-400/50 text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.25)]"
+                : "bg-white/5 border border-white/10 text-zinc-200 hover:bg-zinc-800 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+            }`}
+          >
+            <span>Filter</span>
+            {hasActiveFilter && <span className="text-xs font-semibold">• {activeFilterCount}</span>}
+          </button>
+
+          <button
             onClick={load}
             className="rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800
             shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
@@ -626,6 +812,8 @@ export default function ListingsPage() {
           </div>
         )}
       </div>
+
+      {renderFilterModal()}
     </main>
   );
 }
