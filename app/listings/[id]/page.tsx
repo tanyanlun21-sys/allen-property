@@ -1141,12 +1141,12 @@ export default function ListingDetailPage() {
       {/* �?Manage modal：勾选要删的照片 */}
       {manageOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center overscroll-contain touch-none"
           onClick={() => setManageOpen(false)}
         >
           <div
             ref={modalRef}
-            className="w-[96vw] max-w-7xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+            className="w-[96vw] max-w-7xl max-h-[90vh] overflow-y-auto overscroll-contain touch-pan-y rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
             onClick={(e) => e.stopPropagation()}
           >
             <input
@@ -1312,11 +1312,11 @@ export default function ListingDetailPage() {
       {/* Show all media modal */}
       {showAllOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center overscroll-contain touch-none"
           onClick={() => setShowAllOpen(false)}
         >
           <div
-            className="w-[95vw] max-w-4xl rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+            className="w-[95vw] max-w-4xl max-h-[88vh] overflow-y-auto overscroll-contain touch-pan-y rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import { rm } from "@/lib/money";
@@ -124,6 +124,7 @@ export default function ListingsPage() {
   const [typeTab, setTypeTab] = useState<"all" | "rent" | "sale">("all");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [statusOpen, setStatusOpen] = useState(false);
+  const rentSectionRef = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
 
