@@ -10,6 +10,7 @@ function isActive(pathname: string, href: string) {
 
 export default function TopNav() {
   const pathname = usePathname();
+  const isLoginPage = pathname === "/";
 
   const tabs = [
     { href: "/listings", label: "Listings" },
@@ -34,6 +35,7 @@ export default function TopNav() {
               </span>
             </div>
 
+            {!isLoginPage && (
             <button
               onClick={async () => {
                 const { supabase } = await import("@/lib/supabase");
@@ -44,7 +46,9 @@ export default function TopNav() {
             >
               Logout
             </button>
+            )}
 
+            {!isLoginPage && (
             <nav className="col-span-2 row-start-2 flex w-full items-center justify-center gap-2 overflow-x-auto pb-1 sm:col-span-1 sm:col-start-1 sm:row-start-1 sm:justify-self-start sm:justify-start sm:overflow-visible sm:pb-0">
               {tabs.map((t) => {
                 const active = isActive(pathname, t.href);
@@ -64,6 +68,7 @@ export default function TopNav() {
                 );
               })}
             </nav>
+            )}
           </div>
         </div>
       </header>

@@ -9,12 +9,32 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user ?? null);
+      setChecking(false);
     });
   }, []);
+
+  const register = async () => {
+    setLoading(true);
+    setError(null);
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password
+    });
+
+    setLoading(false);
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setUser(data.user);
+    }
+  };
 
   const login = async () => {
     setLoading(true);
@@ -34,9 +54,13 @@ export default function HomePage() {
     }
   };
 
-  if (user) {
-    window.location.href = "/listings";
-    return null;
+  if (checking || user) {
+    if (user) window.location.href = "/listings";
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="text-sm text-zinc-400">Loading...</div>
+      </main>
+    );
   }
 
   return (
@@ -68,6 +92,14 @@ export default function HomePage() {
             className="w-full rounded-lg bg-white py-2 text-black font-medium hover:opacity-90"
           >
             {loading ? "Logging in..." : "Login"}
+          </button>
+
+          <button
+            onClick={register}
+            disabled={loading}
+            className="w-full rounded-lg border border-white/10 bg-white/5 py-2 text-white font-medium hover:bg-white/10"
+          >
+            Register
           </button>
         </div>
       </div>
