@@ -629,32 +629,32 @@ export default function ListingDetailPage() {
 
   return (
     <main className="min-h-screen text-white bg-[#06070A] bg-[radial-gradient(800px_circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(600px_circle_at_80%_30%,rgba(59,130,246,0.10),transparent_40%),radial-gradient(900px_circle_at_50%_90%,rgba(168,85,247,0.08),transparent_45%)]">
-      <div className="mx-auto max-w-5xl px-4 py-6">
+      <div className="mx-auto max-w-4xl px-4 py-6">
         {/* 下面内容保持你原样（我没�?UI 结构�?*/}
         <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-start">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-5 shadow-[0_14px_45px_rgba(0,0,0,0.38)] backdrop-blur">
-            <div className="text-2xl font-semibold leading-tight text-white">{item.condo_name}</div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-4 shadow-[0_14px_45px_rgba(0,0,0,0.38)] backdrop-blur">
+            <div className="text-xl font-semibold leading-tight text-white">{item.condo_name}</div>
             <div className="mt-1 text-sm text-zinc-400">{item.area ?? "-"}</div>
 
-            <div className="mt-3 text-3xl font-bold tracking-tight text-white">
+            <div className="mt-2 text-2xl font-bold tracking-tight text-white">
               {item.price != null ? rm(item.price) : "-"}
               {item.type === "rent" && <span className="ml-2 text-base font-medium text-zinc-400">/ mo</span>}
             </div>
 
-            <div className="mt-5 grid grid-cols-4 gap-3 text-center">
-              <div className="rounded-xl bg-white/[0.06] px-3 py-3">
+            <div className="mt-4 grid grid-cols-4 gap-2 text-center">
+              <div className="rounded-xl bg-white/[0.06] px-3 py-2">
                 <div className="text-lg font-bold text-white">{isStudioBedrooms(item.bedrooms) ? "Studio" : item.bedrooms ?? "-"}</div>
                 <div className="mt-1 text-xs font-semibold text-zinc-400">Beds</div>
               </div>
-              <div className="rounded-xl bg-white/[0.06] px-3 py-3">
+              <div className="rounded-xl bg-white/[0.06] px-3 py-2">
                 <div className="text-lg font-bold text-white">{item.bathrooms ?? "-"}</div>
                 <div className="mt-1 text-xs font-semibold text-zinc-400">Baths</div>
               </div>
-              <div className="rounded-xl bg-white/[0.06] px-3 py-3">
+              <div className="rounded-xl bg-white/[0.06] px-3 py-2">
                 <div className="text-lg font-bold text-white">{item.sqft ?? "-"}</div>
                 <div className="mt-1 text-xs font-semibold text-zinc-400">sqft</div>
               </div>
-              <div className="rounded-xl bg-white/[0.06] px-3 py-3">
+              <div className="rounded-xl bg-white/[0.06] px-3 py-2">
                 <div className="text-lg font-bold text-white">{item.carparks ?? "-"}</div>
                 <div className="mt-1 text-xs font-semibold text-zinc-400">CP</div>
               </div>
@@ -675,8 +675,8 @@ export default function ListingDetailPage() {
         </div>
 
         <div className="mt-5">
-          <div className="grid gap-3 md:grid-cols-[3fr_2fr] md:h-[520px]">
-            <div className="h-[380px] overflow-hidden rounded-3xl bg-zinc-900 border border-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06)] md:h-full">
+          <div className="grid gap-3 md:grid-cols-[3fr_2fr] md:h-[380px]">
+            <div className="h-[300px] overflow-hidden rounded-3xl bg-zinc-900 border border-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06)] md:h-full">
               {photoUrls.length > 0 ? (
                 <button
                   type="button"
@@ -698,7 +698,7 @@ export default function ListingDetailPage() {
               )}
             </div>
 
-            <div className="grid h-[380px] grid-cols-2 gap-3 md:h-full">
+            <div className="grid h-[300px] grid-cols-2 gap-3 md:h-full">
               {[1, 2, 3, 4].map((slot) => {
                 const idx = slot;
                 const url = photoUrls[idx];
