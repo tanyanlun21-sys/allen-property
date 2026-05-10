@@ -645,44 +645,7 @@ export default function ListingDetailPage() {
           </div>
 
 
-        <div className="grid gap-4 md:grid-cols-[420px_auto] md:items-center">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.045] px-4 py-3 shadow-[0_12px_34px_rgba(0,0,0,0.34)] backdrop-blur">
-            <div className="truncate text-xl font-semibold leading-tight text-white">{item.condo_name}</div>
-            <div className="mt-1 text-sm text-zinc-400">{item.area ?? "-"}</div>
-            <div className="mt-2 text-2xl font-bold tracking-tight text-white">
-              {item.price != null ? rm(item.price) : "-"}
-              {item.type === "rent" && <span className="ml-2 text-sm font-medium text-zinc-400">/ mo</span>}
-            </div>
-          </div>
 
-          <div className="grid grid-cols-4 gap-3 text-center">
-            <div>
-              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.09] text-sm font-bold text-white shadow-[0_10px_26px_rgba(0,0,0,0.28)]">
-                {isStudioBedrooms(item.bedrooms) ? "S" : item.bedrooms ?? "-"}
-              </div>
-              <div className="mt-1 text-[11px] font-semibold text-zinc-400">Beds</div>
-            </div>
-            <div>
-              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.09] text-sm font-bold text-white shadow-[0_10px_26px_rgba(0,0,0,0.28)]">
-                {item.bathrooms ?? "-"}
-              </div>
-              <div className="mt-1 text-[11px] font-semibold text-zinc-400">Baths</div>
-            </div>
-            <div>
-              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.09] text-sm font-bold text-white shadow-[0_10px_26px_rgba(0,0,0,0.28)]">
-                {item.sqft ?? "-"}
-              </div>
-              <div className="mt-1 text-[11px] font-semibold text-zinc-400">sqft</div>
-            </div>
-            <div>
-              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.09] text-sm font-bold text-white shadow-[0_10px_26px_rgba(0,0,0,0.28)]">
-                {item.carparks ?? "-"}
-              </div>
-              <div className="mt-1 text-[11px] font-semibold text-zinc-400">CP</div>
-            </div>
-          </div>
-
-        </div>
 
         <div className="mt-5">
           <div className="grid h-[300px] max-h-[300px] gap-3 overflow-hidden md:grid-cols-[3fr_2fr] md:h-[360px] md:max-h-[360px]">
@@ -799,6 +762,46 @@ export default function ListingDetailPage() {
         </div>
 
           {/* �?�?�?租客模板�?*/}
+
+        <div className="mt-4 grid gap-4 md:grid-cols-[420px_auto] md:items-center">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.045] px-4 py-3 shadow-[0_12px_34px_rgba(0,0,0,0.34)] backdrop-blur">
+            <div className="truncate text-xl font-semibold leading-tight text-white">{item.condo_name}</div>
+            <div className="mt-1 text-sm text-zinc-400">{item.area ?? "-"}</div>
+            <div className="mt-2 text-2xl font-bold tracking-tight text-white">
+              {item.price != null ? rm(item.price) : "-"}
+              {item.type === "rent" && <span className="ml-2 text-sm font-medium text-zinc-400">/ mo</span>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-3 text-center">
+            <div>
+              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.09] text-sm font-bold text-white shadow-[0_10px_26px_rgba(0,0,0,0.28)]">
+                {isStudioBedrooms(item.bedrooms) ? "S" : item.bedrooms ?? "-"}
+              </div>
+              <div className="mt-1 text-[11px] font-semibold text-zinc-400">Beds</div>
+            </div>
+            <div>
+              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.09] text-sm font-bold text-white shadow-[0_10px_26px_rgba(0,0,0,0.28)]">
+                {item.bathrooms ?? "-"}
+              </div>
+              <div className="mt-1 text-[11px] font-semibold text-zinc-400">Baths</div>
+            </div>
+            <div>
+              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.09] text-sm font-bold text-white shadow-[0_10px_26px_rgba(0,0,0,0.28)]">
+                {item.sqft ?? "-"}
+              </div>
+              <div className="mt-1 text-[11px] font-semibold text-zinc-400">sqft</div>
+            </div>
+            <div>
+              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.09] text-sm font-bold text-white shadow-[0_10px_26px_rgba(0,0,0,0.28)]">
+                {item.carparks ?? "-"}
+              </div>
+              <div className="mt-1 text-[11px] font-semibold text-zinc-400">CP</div>
+            </div>
+          </div>
+
+        </div>
+
           <div className="mt-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div className="flex items-center justify-between">
               <div>
