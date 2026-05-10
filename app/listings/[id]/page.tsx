@@ -1092,7 +1092,7 @@ export default function ListingDetailPage() {
             href="/dashboard"
             className="inline-block rounded-lg bg-white/5 border border-white/10 backdrop-blur px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800 shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
           >
-            View dashboard �?
+            View dashboard &rarr;
           </a>
 
           <a
