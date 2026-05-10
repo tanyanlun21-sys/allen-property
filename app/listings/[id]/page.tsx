@@ -770,7 +770,7 @@ export default function ListingDetailPage() {
               <div>
                 <div className="text-base font-semibold text-white">Tenant template</div>
                 <div className="text-xs text-zinc-400 mt-1">
-                  一键复�?/ 一�?WhatsApp（直接贴给租客）
+                  One-click copy / WhatsApp to tenant
                 </div>
               </div>
 
