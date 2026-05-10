@@ -631,6 +631,7 @@ export default function ListingDetailPage() {
     <main className="min-h-screen text-white bg-[#06070A] bg-[radial-gradient(800px_circle_at_20%_10%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(600px_circle_at_80%_30%,rgba(59,130,246,0.10),transparent_40%),radial-gradient(900px_circle_at_50%_90%,rgba(168,85,247,0.08),transparent_45%)]">
       <div className="mx-auto max-w-4xl px-4 py-6">
         {/* 下面内容保持你原样（我没�?UI 结构�?*/}
+
         <div className="grid gap-4 md:grid-cols-[420px_auto_1fr] md:items-center">
           <div className="rounded-2xl border border-white/10 bg-white/[0.045] px-4 py-3 shadow-[0_12px_34px_rgba(0,0,0,0.34)] backdrop-blur">
             <div className="truncate text-xl font-semibold leading-tight text-white">{item.condo_name}</div>
