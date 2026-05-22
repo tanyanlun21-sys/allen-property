@@ -262,13 +262,30 @@ export default function ListingsPage() {
       return okView && okType && okStatus && matchesSearch && okPrice && okBedroom;
     });
 
-    const followUps = base.filter(x => x.status === "Follow-up");
-    const rents = base.filter(x => x.type === "rent" && x.status !== "Follow-up");
-    const sales = base.filter(x => x.type === "sale" && x.status !== "Follow-up");
+    const followUps = base.filter((x) => x.status === "Follow-up");
+    const rents = base.filter((x) => x.type === "rent" && x.status !== "Follow-up");
+    const sales = base.filter((x) => x.type === "sale" && x.status !== "Follow-up");
 
-    const sortByTime = (arr: WorkListing[]) => arr.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    const dateValue = (value: any, fallback: number) => {
+      const t = value ? new Date(value).getTime() : fallback;
+      return Number.isFinite(t) ? t : fallback;
+    };
 
-    return [...sortByTime(followUps), ...sortByTime(rents), ...sortByTime(sales)];
+    const sortFollowUpByFuDate = (arr: WorkListing[]) =>
+      [...arr].sort(
+        (a, b) =>
+          dateValue(a.next_follow_up, Number.MAX_SAFE_INTEGER) -
+          dateValue(b.next_follow_up, Number.MAX_SAFE_INTEGER)
+      );
+
+    const sortNewestFirst = (arr: WorkListing[]) =>
+      [...arr].sort((a, b) => dateValue(b.updated_at, 0) - dateValue(a.updated_at, 0));
+
+    return [
+      ...sortFollowUpByFuDate(followUps),
+      ...sortNewestFirst(rents),
+      ...sortNewestFirst(sales),
+    ];
   }, [items, viewTab, typeTab, status, search, priceMin, priceMax, bedroomFilter]);
 
   const markProcessed = async (id: string) => {
