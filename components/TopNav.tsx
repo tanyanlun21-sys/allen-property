@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -13,6 +13,23 @@ export default function TopNav() {
   const pathname = usePathname();
   const isLoginPage = pathname === "/";
   const [navHidden, setNavHidden] = useState(false);
+  const headerRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (isLoginPage) {
+      document.documentElement.style.setProperty("--topnav-offset", "0px");
+      return;
+    }
+
+    const setOffset = () => {
+      const h = headerRef.current?.offsetHeight ?? 0;
+      document.documentElement.style.setProperty("--topnav-offset", navHidden ? "0px" : h + "px");
+    };
+
+    setOffset();
+    window.addEventListener("resize", setOffset);
+    return () => window.removeEventListener("resize", setOffset);
+  }, [isLoginPage, navHidden]);
 
   useEffect(() => {
     if (isLoginPage) return;
@@ -45,7 +62,7 @@ export default function TopNav() {
 
   return (
     <>
-      <header className={`sticky top-0 z-40 w-full overflow-hidden border-b border-cyan-400/10 bg-gradient-to-r from-[#05070A]/95 via-[rgba(8,20,32,0.96)] to-[#05070A]/95 backdrop-blur shadow-[0_-10px_24px_rgba(34,211,238,0.08)] transition-transform duration-300 ease-out ${!isLoginPage && navHidden ? "-translate-y-full" : "translate-y-0"}`}>
+      <header ref={headerRef} className={`sticky top-0 z-40 w-full overflow-hidden border-b border-cyan-400/10 bg-gradient-to-r from-[#05070A]/95 via-[rgba(8,20,32,0.96)] to-[#05070A]/95 backdrop-blur shadow-[0_-10px_24px_rgba(34,211,238,0.08)] transition-transform duration-300 ease-out ${!isLoginPage && navHidden ? "-translate-y-full" : "translate-y-0"}`}>
         <div className="w-full px-4 py-3 sm:px-6 sm:py-4">
           <div className="grid w-full grid-cols-[1fr_auto] items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
             <div className="flex min-w-0 items-center gap-2 justify-self-start text-white topnav-brand sm:col-start-2 sm:row-start-1 sm:justify-self-center">
