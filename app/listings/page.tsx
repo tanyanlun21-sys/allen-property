@@ -644,7 +644,7 @@ export default function ListingsPage() {
           </a>
         </div>
 
-        <div className="sticky top-[132px] sm:top-[92px] z-30 mt-5 bg-[#05090B]/70 py-2 backdrop-blur-xl">
+        <div className="sticky top-0 z-30 -mx-4 mt-5 border-y border-white/10 bg-[#05090B]/90 px-4 py-2 shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur-xl">
           <div className="group relative">
           <div className="pointer-events-none absolute left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-white/70 bg-white/95 text-zinc-950 shadow-sm transition group-hover:bg-zinc-200">
             <svg
@@ -666,8 +666,20 @@ export default function ListingsPage() {
             placeholder="Search condo name, area, WhatsApp, remark..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-white/5 py-3 pl-14 pr-4 text-sm text-white placeholder-zinc-400 outline-none backdrop-blur transition hover:border-white/20 hover:bg-zinc-900/80 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/25"
+            className="w-full rounded-lg border border-white/10 bg-white/5 py-3 pl-14 pr-28 text-sm text-white placeholder-zinc-400 outline-none backdrop-blur transition hover:border-white/20 hover:bg-zinc-900/80 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/25"
           />
+          <button
+            type="button"
+            aria-label="Open filters"
+            onClick={() => setFilterModalOpen(true)}
+            className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-2 text-xs font-semibold transition ${
+              hasActiveFilter
+                ? "border border-cyan-300/60 bg-cyan-400/25 text-cyan-50 shadow-[0_0_18px_rgba(34,211,238,0.32)]"
+                : "border border-cyan-300/35 bg-cyan-400/14 text-cyan-100 shadow-[0_0_14px_rgba(34,211,238,0.18)] hover:bg-cyan-400/22"
+            }`}
+          >
+            Filter{hasActiveFilter ? ` ${activeFilterCount}` : ""}
+          </button>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">

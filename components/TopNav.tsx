@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -11,6 +12,30 @@ function isActive(pathname: string, href: string) {
 export default function TopNav() {
   const pathname = usePathname();
   const isLoginPage = pathname === "/";
+  const [navHidden, setNavHidden] = useState(false);
+
+  useEffect(() => {
+    if (isLoginPage) return;
+
+    let lastY = window.scrollY;
+
+    const onScroll = () => {
+      const y = window.scrollY;
+
+      if (y < 24) {
+        setNavHidden(false);
+      } else if (y > lastY + 8) {
+        setNavHidden(true);
+      } else if (y < lastY - 8) {
+        setNavHidden(false);
+      }
+
+      lastY = y;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isLoginPage]);
 
   const tabs = [
     { href: "/listings", label: "Listings" },
@@ -20,7 +45,7 @@ export default function TopNav() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full overflow-hidden border-b border-cyan-400/10 bg-gradient-to-r from-[#05070A]/95 via-[rgba(8,20,32,0.96)] to-[#05070A]/95 backdrop-blur shadow-[0_-10px_24px_rgba(34,211,238,0.08)]">
+      <header className={`sticky top-0 z-40 w-full overflow-hidden border-b border-cyan-400/10 bg-gradient-to-r from-[#05070A]/95 via-[rgba(8,20,32,0.96)] to-[#05070A]/95 backdrop-blur shadow-[0_-10px_24px_rgba(34,211,238,0.08)] transition-transform duration-300 ease-out ${!isLoginPage && navHidden ? "-translate-y-full" : "translate-y-0"}`}>
         <div className="w-full px-4 py-3 sm:px-6 sm:py-4">
           <div className="grid w-full grid-cols-[1fr_auto] items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
             <div className="flex min-w-0 items-center gap-2 justify-self-start text-white topnav-brand sm:col-start-2 sm:row-start-1 sm:justify-self-center">
