@@ -205,8 +205,8 @@ export default function AppointmentPage() {
       <div key={a.id} className="rounded-2xl border border-white/10 bg-black/35 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-cyan-100">{timeLabel(a.appointment_time)} ? {listing?.condo_name ?? "No linked listing"}</div>
-            <div className="mt-1 text-xs text-zinc-400">{a.appointment_date} ? {listing?.area ?? "-"}</div>
+            <div className="text-sm font-semibold text-cyan-100">{timeLabel(a.appointment_time)} - {listing?.condo_name ?? "No linked listing"}</div>
+            <div className="mt-1 text-xs text-zinc-400">{a.appointment_date} - {listing?.area ?? "-"}</div>
             <div className="mt-2 text-sm text-white">{listing?.price != null ? rm(listing.price) : "-"}</div>
           </div>
           <span className={"shrink-0 rounded-full border px-3 py-1 text-xs font-semibold " + statusClass(a.status)}>{a.status}</span>
@@ -289,7 +289,7 @@ export default function AppointmentPage() {
             <div className="mt-4 space-y-3">
               <select value={form.listing_id} onChange={(e) => setForm({ ...form, listing_id: e.target.value })} className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-3 text-sm outline-none">
                 <option value="">No linked listing</option>
-                {listings.map((x) => <option key={x.id} value={x.id}>{x.condo_name} ? {x.area ?? "-"}</option>)}
+                {listings.map((x) => <option key={x.id} value={x.id}>{x.condo_name} - {x.area ?? "-"}</option>)}
               </select>
               <div className="grid grid-cols-2 gap-2">
                 <input type="date" value={form.appointment_date} onChange={(e) => setForm({ ...form, appointment_date: e.target.value })} className="rounded-xl border border-white/10 bg-zinc-900 px-3 py-3 text-sm outline-none" />
