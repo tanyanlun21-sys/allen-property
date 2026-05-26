@@ -51,6 +51,12 @@ function timeLabel(t?: string | null) {
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
+function compactTime(t?: string | null) {
+  if (!t) return "----";
+  const [hh, mm] = t.split(":");
+  return String(hh || "00").padStart(2, "0") + String(mm || "00").padStart(2, "0");
+}
+
 function dateValue(date: string, time?: string | null) {
   return new Date(date + "T" + (time || "00:00")).getTime();
 }
@@ -154,7 +160,7 @@ export default function AppointmentPage() {
   const calendarDays = useMemo(() => {
     const [y, m] = month.split("-").map(Number);
     const first = new Date(y, m - 1, 1);
-    const firstDay = first.getDay();
+    const firstDay = (first.getDay() + 6) % 7;
     const daysInMonth = new Date(y, m, 0).getDate();
     const cells: (Date | null)[] = [];
     for (let i = 0; i < firstDay; i++) cells.push(null);
@@ -262,16 +268,24 @@ export default function AppointmentPage() {
   const appointmentCard = (a: AppointmentRow) => {
     const listing = a.listing_id ? listingMap.get(a.listing_id) : null;
     const listing2 = a.listing_id_2 ? listingMap.get(a.listing_id_2) : null;
+    const phone1 = listing?.owner_whatsapp || a.tenant_phone || "-";
+    const phone2 = listing2?.owner_whatsapp || a.tenant_phone || "-";
     return (
       <div key={a.id} className="rounded-2xl border border-white/10 bg-black/35 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="text-sm font-semibold text-cyan-100">
-              {timeLabel(a.appointment_time)} - {listing?.condo_name ?? "No linked listing"}
+              <span className="mr-2 rounded-md bg-amber-300/12 px-2 py-0.5 font-black text-amber-200 shadow-[0_0_16px_rgba(252,211,77,0.18)]">
+                {compactTime(a.appointment_time)}
+              </span>
+              Viewing 1 - {listing?.condo_name ?? "No linked listing"} - {phone1}
             </div>
             {listing2 ? (
               <div className="mt-1 text-sm font-semibold text-cyan-100/85">
-                Viewing 2 - {listing2.condo_name}
+                <span className="mr-2 rounded-md bg-amber-300/12 px-2 py-0.5 font-black text-amber-200 shadow-[0_0_16px_rgba(252,211,77,0.18)]">
+                  {compactTime(a.appointment_time)}
+                </span>
+                Viewing 2 - {listing2.condo_name} - {phone2}
               </div>
             ) : null}
             <div className="mt-1 text-xs text-zinc-400">{a.appointment_date} - {listing?.area ?? "-"}</div>
@@ -327,7 +341,7 @@ export default function AppointmentPage() {
         <section className="mt-6 grid gap-4 lg:grid-cols-[1fr_360px]">
           <div className="rounded-3xl border border-white/10 bg-white/[0.045] p-4 backdrop-blur-xl">
             <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-zinc-400">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => <div key={d}>{d}</div>)}
+              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => <div key={d}>{d}</div>)}
             </div>
 
             <div className="mt-3 grid grid-cols-7 gap-2">
