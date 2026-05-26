@@ -58,6 +58,7 @@ export default function TopNav() {
     { href: "/listings", label: "Listings" },
     { href: "/dashboard", label: "Dashboard" },
     { href: "/income", label: "Income" },
+    { href: "/appointment", label: "Appointment" },
   ];
 
   return (
