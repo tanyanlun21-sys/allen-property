@@ -71,6 +71,7 @@ export default function AppointmentPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(isoDate(new Date()));
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     listing_id: "",
@@ -177,12 +178,41 @@ export default function AppointmentPage() {
     .filter((a) => a.appointment_date < today && ["Pending", "Confirmed", "No show"].includes(a.status))
     .sort((a, b) => dateValue(b.appointment_date, b.appointment_time) - dateValue(a.appointment_date, a.appointment_time));
 
-  const createAppointment = async () => {
+  const resetForm = () => {
+    setEditingId(null);
+    setForm({
+      listing_id: "",
+      listing_id_2: "",
+      appointment_date: isoDate(new Date()),
+      appointment_time: "",
+      tenant_name: "",
+      tenant_phone: "",
+      status: "Pending",
+      notes: "",
+    });
+  };
+
+  const startEdit = (a: AppointmentRow) => {
+    setEditingId(a.id);
+    setSelectedDate(null);
+    setForm({
+      listing_id: a.listing_id ?? "",
+      listing_id_2: a.listing_id_2 ?? "",
+      appointment_date: a.appointment_date,
+      appointment_time: a.appointment_time ?? "",
+      tenant_name: a.tenant_name ?? "",
+      tenant_phone: a.tenant_phone ?? "",
+      status: a.status,
+      notes: a.notes ?? "",
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const saveAppointment = async () => {
     if (!userId) return;
     setErr(null);
 
     const payload = {
-      user_id: userId,
       listing_id: form.listing_id || null,
       listing_id_2: form.listing_id_2 || null,
       appointment_date: form.appointment_date,
@@ -191,15 +221,41 @@ export default function AppointmentPage() {
       tenant_phone: form.tenant_phone.trim() || null,
       status: form.status,
       notes: form.notes.trim() || null,
+      updated_at: new Date().toISOString(),
     };
 
-    const { error } = await supabase.from("appointments").insert(payload);
+    const query = editingId
+      ? supabase.from("appointments").update(payload).eq("id", editingId).eq("user_id", userId)
+      : supabase.from("appointments").insert({ ...payload, user_id: userId });
+
+    const { error } = await query;
     if (error) {
       setErr(error.message);
       return;
     }
 
-    setForm((f) => ({ ...f, tenant_name: "", tenant_phone: "", notes: "" }));
+    resetForm();
+    await load();
+  };
+
+  const deleteAppointment = async (id: string) => {
+    if (!userId) return;
+    const ok = window.confirm("Delete this appointment?");
+    if (!ok) return;
+
+    setErr(null);
+    const { error } = await supabase
+      .from("appointments")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
+
+    if (error) {
+      setErr(error.message);
+      return;
+    }
+
+    if (editingId === id) resetForm();
     await load();
   };
 
@@ -231,6 +287,23 @@ export default function AppointmentPage() {
           <div>Phone: <span className="text-white">{a.tenant_phone ?? "-"}</span></div>
         </div>
         {a.notes ? <div className="mt-3 rounded-xl bg-white/5 p-3 text-sm text-zinc-200">{a.notes}</div> : null}
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => startEdit(a)}
+            className="rounded-lg border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-400/20"
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={() => deleteAppointment(a.id)}
+            className="rounded-lg border border-red-400/25 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 hover:bg-red-500/20"
+          >
+            Delete
+          </button>
+        </div>
       </div>
     );
   };
@@ -300,7 +373,7 @@ export default function AppointmentPage() {
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl">
-            <h2 className="text-lg font-bold">New appointment</h2>
+            <h2 className="text-lg font-bold">{editingId ? "Edit appointment" : "New appointment"}</h2>
             <div className="mt-4 space-y-3">
               <div>
                 <div className="mb-1 text-xs font-semibold text-zinc-400">Viewing 1</div>
@@ -327,7 +400,18 @@ export default function AppointmentPage() {
                 {STATUSES.map((s) => <option key={s}>{s}</option>)}
               </select>
               <textarea placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="min-h-24 w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-3 text-sm outline-none" />
-              <button onClick={createAppointment} className="w-full rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-black shadow-[0_0_24px_rgba(34,211,238,0.32)]">Add appointment</button>
+              <button onClick={saveAppointment} className="w-full rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-black shadow-[0_0_24px_rgba(34,211,238,0.32)]">
+                {editingId ? "Save changes" : "Add appointment"}
+              </button>
+              {editingId ? (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-zinc-200 hover:bg-white/10"
+                >
+                  Cancel edit
+                </button>
+              ) : null}
             </div>
           </div>
         </section>
