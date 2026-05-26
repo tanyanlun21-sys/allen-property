@@ -12,12 +12,14 @@ type ListingRow = {
   area: string | null;
   price: number | null;
   type: "rent" | "sale";
+  owner_whatsapp: string | null;
 };
 
 type AppointmentRow = {
   id: string;
   user_id: string;
   listing_id: string | null;
+  listing_id_2: string | null;
   appointment_date: string;
   appointment_time: string | null;
   tenant_name: string | null;
@@ -72,6 +74,7 @@ export default function AppointmentPage() {
 
   const [form, setForm] = useState({
     listing_id: "",
+    listing_id_2: "",
     appointment_date: isoDate(new Date()),
     appointment_time: "",
     tenant_name: "",
@@ -99,7 +102,7 @@ export default function AppointmentPage() {
 
     const { data: appts, error: apptErr } = await supabase
       .from("appointments")
-      .select("id,user_id,listing_id,appointment_date,appointment_time,tenant_name,tenant_phone,status,notes,created_at,updated_at")
+      .select("id,user_id,listing_id,listing_id_2,appointment_date,appointment_time,tenant_name,tenant_phone,status,notes,created_at,updated_at")
       .eq("user_id", userId)
       .gte("appointment_date", from)
       .lte("appointment_date", to)
@@ -116,7 +119,7 @@ export default function AppointmentPage() {
 
     const { data: ls, error: lsErr } = await supabase
       .from("listings")
-      .select("id,condo_name,area,price,type")
+      .select("id,condo_name,area,price,type,owner_whatsapp")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
 
@@ -181,6 +184,7 @@ export default function AppointmentPage() {
     const payload = {
       user_id: userId,
       listing_id: form.listing_id || null,
+      listing_id_2: form.listing_id_2 || null,
       appointment_date: form.appointment_date,
       appointment_time: form.appointment_time || null,
       tenant_name: form.tenant_name.trim() || null,
@@ -201,13 +205,24 @@ export default function AppointmentPage() {
 
   const appointmentCard = (a: AppointmentRow) => {
     const listing = a.listing_id ? listingMap.get(a.listing_id) : null;
+    const listing2 = a.listing_id_2 ? listingMap.get(a.listing_id_2) : null;
     return (
       <div key={a.id} className="rounded-2xl border border-white/10 bg-black/35 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-cyan-100">{timeLabel(a.appointment_time)} - {listing?.condo_name ?? "No linked listing"}</div>
+            <div className="text-sm font-semibold text-cyan-100">
+              {timeLabel(a.appointment_time)} - {listing?.condo_name ?? "No linked listing"}
+            </div>
+            {listing2 ? (
+              <div className="mt-1 text-sm font-semibold text-cyan-100/85">
+                Viewing 2 - {listing2.condo_name}
+              </div>
+            ) : null}
             <div className="mt-1 text-xs text-zinc-400">{a.appointment_date} - {listing?.area ?? "-"}</div>
-            <div className="mt-2 text-sm text-white">{listing?.price != null ? rm(listing.price) : "-"}</div>
+            <div className="mt-2 text-sm text-white">
+              {listing?.price != null ? rm(listing.price) : "-"}
+              {listing2?.price != null ? <span className="text-zinc-400"> / {rm(listing2.price)}</span> : null}
+            </div>
           </div>
           <span className={"shrink-0 rounded-full border px-3 py-1 text-xs font-semibold " + statusClass(a.status)}>{a.status}</span>
         </div>
@@ -287,10 +302,21 @@ export default function AppointmentPage() {
           <div className="rounded-3xl border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl">
             <h2 className="text-lg font-bold">New appointment</h2>
             <div className="mt-4 space-y-3">
-              <select value={form.listing_id} onChange={(e) => setForm({ ...form, listing_id: e.target.value })} className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-3 text-sm outline-none">
-                <option value="">No linked listing</option>
-                {listings.map((x) => <option key={x.id} value={x.id}>{x.condo_name} - {x.area ?? "-"}</option>)}
-              </select>
+              <div>
+                <div className="mb-1 text-xs font-semibold text-zinc-400">Viewing 1</div>
+                <select value={form.listing_id} onChange={(e) => setForm({ ...form, listing_id: e.target.value })} className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-3 text-sm outline-none">
+                  <option value="">No linked listing</option>
+                  {listings.map((x) => <option key={x.id} value={x.id}>{x.condo_name} - {x.owner_whatsapp || x.area || "-"}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <div className="mb-1 text-xs font-semibold text-zinc-400">Viewing 2 <span className="font-normal text-zinc-500">(optional)</span></div>
+                <select value={form.listing_id_2} onChange={(e) => setForm({ ...form, listing_id_2: e.target.value })} className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-3 text-sm outline-none">
+                  <option value="">Empty</option>
+                  {listings.map((x) => <option key={x.id} value={x.id}>{x.condo_name} - {x.owner_whatsapp || x.area || "-"}</option>)}
+                </select>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <input type="date" value={form.appointment_date} onChange={(e) => setForm({ ...form, appointment_date: e.target.value })} className="rounded-xl border border-white/10 bg-zinc-900 px-3 py-3 text-sm outline-none" />
                 <input type="time" value={form.appointment_time} onChange={(e) => setForm({ ...form, appointment_time: e.target.value })} className="rounded-xl border border-white/10 bg-zinc-900 px-3 py-3 text-sm outline-none" />
