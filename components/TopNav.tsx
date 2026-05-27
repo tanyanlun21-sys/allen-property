@@ -92,7 +92,7 @@ export default function TopNav() {
             )}
 
             {!isLoginPage && (
-            <nav className="col-span-2 row-start-2 flex w-full items-center justify-center gap-2 overflow-x-auto pb-1 sm:col-span-1 sm:col-start-1 sm:row-start-1 sm:justify-self-start sm:justify-start sm:overflow-visible sm:pb-0">
+            <nav className="hidden items-center gap-2 sm:col-span-1 sm:col-start-1 sm:row-start-1 sm:flex sm:justify-self-start sm:justify-start">
               {tabs.map((t) => {
                 const active = isActive(pathname, t.href);
                 return (
@@ -115,6 +115,26 @@ export default function TopNav() {
           </div>
         </div>
       </header>
+
+      {!isLoginPage && (
+        <nav className="bottom-tab-nav fixed inset-x-0 bottom-0 z-50 grid grid-cols-4 gap-2 border-t border-cyan-400/10 bg-[#05090B]/92 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl sm:hidden">
+          {tabs.map((t) => {
+            const active = isActive(pathname, t.href);
+            return (
+              <Link
+                key={t.href}
+                href={t.href}
+                className={
+                  "flex min-h-12 items-center justify-center rounded-2xl text-xs font-semibold transition " +
+                  (active ? "bg-white text-black" : "bg-white/[0.06] text-zinc-200")
+                }
+              >
+                {t.label}
+              </Link>
+            );
+          })}
+        </nav>
+      )}
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@700&display=swap');

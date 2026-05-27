@@ -1,0 +1,17 @@
+{
+  "name": "Allen Property Unit Collect",
+  "short_name": "Allen Property",
+  "start_url": "/listings",
+  "display": "standalone",
+  "background_color": "#05090B",
+  "theme_color": "#061014",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

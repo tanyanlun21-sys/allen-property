@@ -51,10 +51,20 @@ function timeLabel(t?: string | null) {
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
-function compactTime(t?: string | null) {
-  if (!t) return "----";
+function timeShort(t?: string | null) {
+  if (!t) return "--";
   const [hh, mm] = t.split(":");
-  return String(hh || "00").padStart(2, "0") + String(mm || "00").padStart(2, "0");
+  const hour24 = Number(hh || 0);
+  const minute = Number(mm || 0);
+  const suffix = hour24 >= 12 ? "pm" : "am";
+  const hour12 = hour24 % 12 || 12;
+  return minute ? hour12 + ":" + String(minute).padStart(2, "0") + suffix : hour12 + suffix;
+}
+
+function appointmentDateLine(date: string, time?: string | null) {
+  const d = new Date(date + "T00:00:00");
+  const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  return d.getDate() + "-" + (d.getMonth() + 1) + "-" + d.getFullYear() + " [" + weekdays[d.getDay()] + "] - " + timeShort(time);
 }
 
 function dateValue(date: string, time?: string | null) {
@@ -270,50 +280,62 @@ export default function AppointmentPage() {
     const listing2 = a.listing_id_2 ? listingMap.get(a.listing_id_2) : null;
     const phone1 = listing?.owner_whatsapp || a.tenant_phone || "-";
     const phone2 = listing2?.owner_whatsapp || a.tenant_phone || "-";
+
     return (
       <div key={a.id} className="rounded-2xl border border-white/10 bg-black/35 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-cyan-100">
-              <span className="mr-2 rounded-md bg-amber-300/12 px-2 py-0.5 font-black text-amber-200 shadow-[0_0_16px_rgba(252,211,77,0.18)]">
-                {compactTime(a.appointment_time)}
-              </span>
-              Viewing 1 - {listing?.condo_name ?? "No linked listing"} - {phone1}
+            <div className="text-sm font-semibold text-zinc-300">
+              {appointmentDateLine(a.appointment_date, a.appointment_time)}
             </div>
-            {listing2 ? (
-              <div className="mt-1 text-sm font-semibold text-cyan-100/85">
-                <span className="mr-2 rounded-md bg-amber-300/12 px-2 py-0.5 font-black text-amber-200 shadow-[0_0_16px_rgba(252,211,77,0.18)]">
-                  {compactTime(a.appointment_time)}
-                </span>
-                Viewing 2 - {listing2.condo_name} - {phone2}
+
+            <div className="mt-3 space-y-3">
+              <div>
+                <div className="text-sm font-bold text-cyan-100">
+                  Viewing 1 | {listing?.condo_name ?? "No linked listing"} - {phone1}
+                </div>
+                <div className="mt-1 text-sm font-semibold text-amber-200">
+                  {listing?.price != null ? rm(listing.price) : "-"}
+                </div>
               </div>
-            ) : null}
-            <div className="mt-1 text-xs text-zinc-400">{a.appointment_date} - {listing?.area ?? "-"}</div>
-            <div className="mt-2 text-sm text-white">
-              {listing?.price != null ? rm(listing.price) : "-"}
-              {listing2?.price != null ? <span className="text-zinc-400"> / {rm(listing2.price)}</span> : null}
+
+              {listing2 ? (
+                <div>
+                  <div className="text-sm font-bold text-cyan-100/90">
+                    Viewing 2 | {listing2.condo_name} - {phone2}
+                  </div>
+                  <div className="mt-1 text-sm font-semibold text-amber-200">
+                    {listing2.price != null ? rm(listing2.price) : "-"}
+                  </div>
+                </div>
+              ) : null}
             </div>
+
+            <div className="mt-3 text-xs text-zinc-400">{listing?.area ?? "-"}</div>
           </div>
+
           <span className={"shrink-0 rounded-full border px-3 py-1 text-xs font-semibold " + statusClass(a.status)}>{a.status}</span>
         </div>
-        <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-zinc-300 sm:grid-cols-2">
+
+        <div className="mt-4 grid grid-cols-1 gap-2 text-sm text-zinc-300 sm:grid-cols-2">
           <div>Tenant: <span className="text-white">{a.tenant_name ?? "-"}</span></div>
           <div>Phone: <span className="text-white">{a.tenant_phone ?? "-"}</span></div>
         </div>
+
         {a.notes ? <div className="mt-3 rounded-xl bg-white/5 p-3 text-sm text-zinc-200">{a.notes}</div> : null}
 
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={() => startEdit(a)}
-            className="rounded-lg border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-400/20"
+            className="min-h-11 rounded-lg border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-400/20"
           >
             Edit
           </button>
           <button
             type="button"
             onClick={() => deleteAppointment(a.id)}
-            className="rounded-lg border border-red-400/25 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 hover:bg-red-500/20"
+            className="min-h-11 rounded-lg border border-red-400/25 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 hover:bg-red-500/20"
           >
             Delete
           </button>
@@ -357,7 +379,7 @@ export default function AppointmentPage() {
                     disabled={!d}
                     onClick={() => d && setSelectedDate(key)}
                     className={
-                      "min-h-28 rounded-2xl border p-2 text-left transition " +
+                      "min-h-[64px] rounded-2xl sm:min-h-28 border p-2 text-left transition " +
                       (!d ? "border-transparent bg-transparent" :
                       isToday ? "border-cyan-300/60 bg-cyan-400/20 shadow-[0_0_24px_rgba(34,211,238,0.28)]" :
                       isSelected ? "border-cyan-400/45 bg-white/10" :
@@ -371,12 +393,13 @@ export default function AppointmentPage() {
                           {list.slice(0, 3).map((a) => {
                             const listing = a.listing_id ? listingMap.get(a.listing_id) : null;
                             return (
-                              <div key={a.id} className="truncate rounded-lg bg-cyan-400/10 px-2 py-1 text-[11px] text-cyan-100">
+                              <div key={a.id} className="hidden truncate rounded-lg bg-cyan-400/10 px-2 py-1 text-[11px] text-cyan-100 sm:block">
                                 {timeLabel(a.appointment_time)} {listing?.condo_name ?? a.tenant_name ?? "Appointment"}
                               </div>
                             );
                           })}
-                          {list.length > 3 ? <div className="text-[11px] text-zinc-400">+{list.length - 3} more</div> : null}
+                          {list.length ? <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-cyan-400/20 text-[10px] font-bold text-cyan-100 sm:hidden">{list.length}</div> : null}
+                          {list.length > 3 ? <div className="hidden text-[11px] text-zinc-400 sm:block">+{list.length - 3} more</div> : null}
                         </div>
                       </>
                     ) : null}
@@ -447,8 +470,8 @@ export default function AppointmentPage() {
       </div>
 
       {selectedDate && selectedAppointments.length > 0 ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm" onClick={() => setSelectedDate(null)}>
-          <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-[#090d12]/95 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.8)]" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={() => setSelectedDate(null)}>
+          <div className="max-h-[82vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl border border-white/10 bg-[#090d12]/95 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.8)] sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold">{selectedDate}</h2>
