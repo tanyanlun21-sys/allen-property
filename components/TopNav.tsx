@@ -12,11 +12,12 @@ function isActive(pathname: string, href: string) {
 export default function TopNav() {
   const pathname = usePathname();
   const isLoginPage = pathname === "/";
+  const isPublicPage = pathname === "/properties" || pathname.startsWith("/properties/");
   const [navHidden, setNavHidden] = useState(false);
   const headerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (isLoginPage) {
+    if (isLoginPage || isPublicPage) {
       document.documentElement.style.setProperty("--topnav-offset", "0px");
       return;
     }
@@ -60,6 +61,8 @@ export default function TopNav() {
     { href: "/income", label: "Income" },
     { href: "/appointment", label: "Appointment" },
   ];
+
+  if (isPublicPage) return null;
 
   return (
     <>
