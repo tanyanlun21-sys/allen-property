@@ -22,7 +22,7 @@ type ShowcaseListing = {
   owner_whatsapp: string | null;
 };
 
-const HIDDEN_STATUSES = ["Booked", "Closed", "Inactive"];
+const HIDDEN_STATUSES = "(Booked,Closed,Inactive)";
 
 function formatDate(date?: string | null) {
   if (!date) return "Available now";
