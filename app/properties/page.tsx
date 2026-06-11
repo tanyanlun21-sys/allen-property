@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PhotoCarousel from "@/components/PhotoCarousel";
 import { rm } from "@/lib/money";
 
 type ShowcaseListing = {
   id: string;
+  type: "rent" | "sale" | string;
   condo_name: string;
   area: string | null;
   price: number | null;
@@ -16,11 +18,11 @@ type ShowcaseListing = {
   carparks: number | null;
   furnish: "Fully" | "Partial" | null;
   available_from: string | null;
-  status: string;
-  owner_whatsapp: string | null;
+  status: "Available" | "Follow-up" | string;
+  _photoUrls?: string[];
 };
 
-const HIDDEN_STATUSES = "(Booked,Closed,Inactive)";
+const PUBLIC_STATUSES = ["Available", "Follow-up"] as const;
 
 function formatDate(date?: string | null) {
   if (!date) return "Available now";
@@ -31,13 +33,8 @@ function formatDate(date?: string | null) {
 
 function publicStatusLabel(status: string) {
   if (status === "Available") return "Available";
-  if (["Follow-up", "Viewing", "Negotiating"].includes(status)) return "Incoming";
+  if (status === "Follow-up") return "Incoming";
   return "Hidden";
-}
-
-function normalizeWhatsApp(phone: string | null) {
-  if (!phone) return "";
-  return phone.replace(/[^0-9]/g, "");
 }
 
 export default function PropertiesPage() {
@@ -59,10 +56,9 @@ export default function PropertiesPage() {
       const { data, error } = await supabase
         .from("listings")
         .select(
-          "id,condo_name,area,price,sqft,bedrooms,bathrooms,carparks,furnish,available_from,status,owner_whatsapp"
+          "id,type,condo_name,area,price,sqft,bedrooms,bathrooms,carparks,furnish,available_from,status"
         )
-        .eq("is_public", true)
-        .not("status", "in", HIDDEN_STATUSES)
+        .in("status", PUBLIC_STATUSES)
         .order("updated_at", { ascending: false });
 
       if (error) {
@@ -201,95 +197,52 @@ export default function PropertiesPage() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {filtered.map((item) => {
-              const phone = normalizeWhatsApp(item.owner_whatsapp);
-              const contactUrl = phone ? `tel:${phone}` : "#";
-              const waUrl = phone ? `https://wa.me/${phone}` : "#";
               const status = publicStatusLabel(item.status);
+              const priceLabel = item.price != null ? `${rm(item.price)}${item.type === "rent" ? " / mo" : ""}` : "-";
+              const summary = [
+                item.sqft ? `${item.sqft} sqft` : null,
+                item.bedrooms != null ? `${item.bedrooms}R` : null,
+                item.bathrooms != null ? `${item.bathrooms}B` : null,
+                item.carparks != null ? `${item.carparks}CP` : null,
+              ]
+                .filter(Boolean)
+                .join(" • ");
               return (
-                <article key={item.id} className="group overflow-hidden rounded-3xl border border-white/10 bg-[#07111D] p-5 shadow-[0_20px_80px_rgba(15,23,42,0.35)] transition hover:-translate-y-1">
-                  <div className="mb-4 flex items-center justify-between gap-3">
+                <Link
+                  key={item.id}
+                  href={`/properties/${item.id}`}
+                  className="group overflow-hidden rounded-3xl border border-white/10 bg-[#07111D] transition hover:-translate-y-1 hover:border-cyan-400/40"
+                >
+                  <div className="relative">
+                    <PhotoCarousel urls={item._photoUrls ?? []} />
+                    <div className="absolute inset-x-0 top-4 flex items-center justify-between gap-3 px-4">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          status === "Available"
+                            ? "bg-emerald-500/20 text-emerald-200"
+                            : "bg-cyan-500/20 text-cyan-200"
+                        }`}
+                      >
+                        {status}
+                      </span>
+                      {item.furnish && (
+                        <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-zinc-200">
+                          {item.furnish}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 p-5">
                     <div>
-                      <h2 className="text-xl font-semibold text-white">{item.condo_name}</h2>
-                      <p className="text-sm text-zinc-400">{item.area ?? "Unknown area"}</p>
+                      <div className="text-lg font-semibold text-white">{item.condo_name}</div>
+                      <div className="text-sm text-zinc-400">{item.area ?? "Unknown area"}</div>
                     </div>
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        status === "Available" ? "bg-emerald-500/15 text-emerald-300" : "bg-cyan-500/15 text-cyan-200"
-                      }`}
-                    >
-                      {status}
-                    </span>
+                    <div className="text-sm font-semibold text-white">{priceLabel}</div>
+                    <div className="text-sm text-zinc-300">{summary}</div>
+                    <div className="text-xs uppercase tracking-[0.25em] text-zinc-500">{status}</div>
                   </div>
-
-                  {status === "Incoming" && (
-                    <div className="mb-4 rounded-3xl bg-white/5 p-3 text-sm text-cyan-200">
-                      Available from {formatDate(item.available_from)}
-                    </div>
-                  )}
-
-                  <div className="grid gap-3 rounded-3xl border border-white/5 bg-white/5 p-4 text-sm text-zinc-300">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Price</div>
-                        <div className="mt-1 text-base font-semibold text-white">{item.price != null ? rm(item.price) : "-"}</div>
-                      </div>
-                      <div>
-                        <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Sqft</div>
-                        <div className="mt-1 text-base font-semibold text-white">{item.sqft ?? "-"}</div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3 text-center">
-                      <div>
-                        <div className="text-xs text-zinc-400">Beds</div>
-                        <div className="mt-1 text-sm font-semibold text-white">{item.bedrooms ?? "-"}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-zinc-400">Baths</div>
-                        <div className="mt-1 text-sm font-semibold text-white">{item.bathrooms ?? "-"}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-zinc-400">Carparks</div>
-                        <div className="mt-1 text-sm font-semibold text-white">{item.carparks ?? "-"}</div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <div className="text-xs text-zinc-400">Furnish</div>
-                        <div className="mt-1 text-sm font-semibold text-white">{item.furnish ?? "-"}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-zinc-400">Available</div>
-                        <div className="mt-1 text-sm font-semibold text-white">{formatDate(item.available_from)}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <Link
-                      href={`/properties/${item.id}`}
-                      className="inline-flex flex-1 items-center justify-center rounded-2xl bg-cyan-400 px-4 py-3 text-sm font-semibold text-black transition hover:bg-cyan-300"
-                    >
-                      View details
-                    </Link>
-                    <a
-                      href={contactUrl}
-                      className={`inline-flex flex-1 items-center justify-center rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold transition ${
-                        phone ? "bg-white/5 text-white hover:bg-white/10" : "cursor-not-allowed bg-white/5 text-zinc-500"
-                      }`}
-                    >
-                      Contact agent
-                    </a>
-                    <a
-                      href={waUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={`inline-flex items-center justify-center rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold transition ${
-                        phone ? "bg-white/5 text-white hover:bg-white/10" : "cursor-not-allowed bg-white/5 text-zinc-500"
-                      }`}
-                    >
-                      WhatsApp
-                    </a>
-                  </div>
-                </article>
+                </Link>
               );
             })}
           </div>

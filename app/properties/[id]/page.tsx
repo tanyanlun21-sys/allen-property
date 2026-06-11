@@ -18,11 +18,9 @@ type ShowcaseListing = {
   carparks: number | null;
   furnish: "Fully" | "Partial" | null;
   available_from: string | null;
-  status: string;
-  owner_whatsapp: string | null;
+  status: "Available" | "Follow-up" | string;
+  type: "rent" | "sale" | string;
 };
-
-const HIDDEN_STATUSES = "(Booked,Closed,Inactive)";
 
 function formatDate(date?: string | null) {
   if (!date) return "Available now";
@@ -33,13 +31,8 @@ function formatDate(date?: string | null) {
 
 function formatStatus(status: string) {
   if (status === "Available") return "Available";
-  if (["Follow-up", "Viewing", "Negotiating"].includes(status)) return "Incoming";
+  if (status === "Follow-up") return "Incoming";
   return "Hidden";
-}
-
-function normalizeWhatsApp(phone: string | null) {
-  if (!phone) return "";
-  return phone.replace(/[^0-9]/g, "");
 }
 
 export default function PropertyDetailPage() {
@@ -48,17 +41,8 @@ export default function PropertyDetailPage() {
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [notifyOpen, setNotifyOpen] = useState(false);
-  const [notifyName, setNotifyName] = useState("");
-  const [notifyWhatsApp, setNotifyWhatsApp] = useState("");
-  const [notifySaving, setNotifySaving] = useState(false);
-  const [notifySent, setNotifySent] = useState(false);
 
-  const isIncoming = item ? ["Follow-up", "Viewing", "Negotiating"].includes(item.status) : false;
   const statusLabel = item ? formatStatus(item.status) : "";
-  const phone = normalizeWhatsApp(item?.owner_whatsapp ?? null);
-  const whatsappUrl = phone ? `https://wa.me/${phone}` : "#";
-  const telUrl = phone ? `tel:${phone}` : "#";
 
   useEffect(() => {
     const load = async () => {
@@ -76,11 +60,10 @@ export default function PropertyDetailPage() {
       const { data, error } = await supabase
         .from("listings")
         .select(
-          "id,condo_name,area,price,sqft,bedrooms,bathrooms,carparks,furnish,available_from,status,owner_whatsapp"
+          "id,condo_name,area,price,sqft,bedrooms,bathrooms,carparks,furnish,available_from,status,type"
         )
         .eq("id", id)
-        .eq("is_public", true)
-        .not("status", "in", HIDDEN_STATUSES)
+        .in("status", ["Available", "Follow-up"])
         .maybeSingle();
 
       if (error) {
@@ -118,34 +101,6 @@ export default function PropertyDetailPage() {
     load();
   }, [id]);
 
-  const submitNotify = async () => {
-    if (!id || !notifyName.trim() || !notifyWhatsApp.trim()) {
-      setError("Please provide name and WhatsApp number.");
-      return;
-    }
-
-    setNotifySaving(true);
-    setError(null);
-
-    const { error } = await supabase.from("property_showcase_notifications").insert({
-      listing_id: id,
-      name: notifyName.trim(),
-      whatsapp: notifyWhatsApp.trim(),
-    });
-
-    if (error) {
-      setError(error.message);
-      setNotifySaving(false);
-      return;
-    }
-
-    setNotifySent(true);
-    setNotifyOpen(false);
-    setNotifySaving(false);
-    setNotifyName("");
-    setNotifyWhatsApp("");
-  };
-
   const detailRows = useMemo(() => {
     if (!item) return [];
     return [
@@ -167,21 +122,13 @@ export default function PropertyDetailPage() {
             <p className="text-sm uppercase tracking-[0.32em] text-cyan-300/80">Property Showcase</p>
             <h1 className="mt-3 text-4xl font-semibold tracking-tight text-white">{item?.condo_name ?? "Loading property"}</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-              Browse the public property listing with dark theme design and direct agent contact.
+              Browse the public property showcase with available and follow-up listings only.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link href="/properties" className="rounded-3xl bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
               Back to listings
             </Link>
-            <a
-              href={telUrl}
-              className={`rounded-3xl px-4 py-3 text-sm font-semibold transition ${
-                phone ? "bg-cyan-400 text-black hover:bg-cyan-300" : "bg-white/5 text-zinc-500 cursor-not-allowed"
-              }`}
-            >
-              Contact agent
-            </a>
           </div>
         </div>
 
@@ -224,51 +171,6 @@ export default function PropertyDetailPage() {
                 ))}
               </div>
 
-              <div className="grid gap-3 rounded-3xl border border-white/10 bg-white/5 p-5">
-                <div className="text-sm font-semibold text-white">Agent contact</div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <a
-                    href={telUrl}
-                    className={`rounded-2xl px-4 py-3 text-sm font-semibold text-center transition ${
-                      phone ? "bg-cyan-400 text-black hover:bg-cyan-300" : "bg-white/5 text-zinc-500 cursor-not-allowed"
-                    }`}
-                  >
-                    Call agent
-                  </a>
-                  <a
-                    href={whatsappUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={`rounded-2xl px-4 py-3 text-sm font-semibold text-center transition ${
-                      phone ? "bg-white/5 text-white hover:bg-white/10" : "bg-white/5 text-zinc-500 cursor-not-allowed"
-                    }`}
-                  >
-                    WhatsApp agent
-                  </a>
-                </div>
-              </div>
-
-              {isIncoming && (
-                <div className="rounded-3xl border border-cyan-400/15 bg-[#07111D] p-6 shadow-[0_20px_80px_rgba(15,23,42,0.25)]">
-                  <div className="text-base font-semibold text-white">Notify me</div>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Leave your name and WhatsApp. We will contact you when this property becomes available.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setNotifyOpen(true)}
-                    className="mt-4 rounded-3xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-black transition hover:bg-cyan-300"
-                  >
-                    Notify me
-                  </button>
-                </div>
-              )}
-
-              {notifySent && (
-                <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-200">
-                  Thank you! We have received your request and will notify you once the property is available.
-                </div>
-              )}
             </div>
 
             <aside className="space-y-6">
@@ -298,55 +200,6 @@ export default function PropertyDetailPage() {
         )}
       </div>
 
-      {notifyOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 p-4">
-          <div className="mx-auto max-w-lg rounded-3xl border border-cyan-400/20 bg-[#07111D] p-6 shadow-[0_20px_80px_rgba(15,23,42,0.35)]">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold text-white">Notify me</h2>
-                <p className="mt-1 text-sm text-zinc-400">We'll send you a message when this listing becomes available.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setNotifyOpen(false)}
-                className="rounded-full bg-white/5 px-3 py-2 text-sm text-white hover:bg-white/10"
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              <label className="block text-sm text-zinc-300">
-                Name
-                <input
-                  value={notifyName}
-                  onChange={(e) => setNotifyName(e.target.value)}
-                  className="mt-2 w-full rounded-3xl border border-white/10 bg-[#0F1825] px-4 py-3 text-white outline-none"
-                  placeholder="Your name"
-                />
-              </label>
-              <label className="block text-sm text-zinc-300">
-                WhatsApp
-                <input
-                  value={notifyWhatsApp}
-                  onChange={(e) => setNotifyWhatsApp(e.target.value)}
-                  className="mt-2 w-full rounded-3xl border border-white/10 bg-[#0F1825] px-4 py-3 text-white outline-none"
-                  placeholder="e.g. 60123456789"
-                />
-              </label>
-              {error && <div className="text-sm text-red-400">{error}</div>}
-              <button
-                type="button"
-                onClick={submitNotify}
-                disabled={notifySaving}
-                className="w-full rounded-3xl bg-cyan-400 px-4 py-3 text-sm font-semibold text-black transition hover:bg-cyan-300 disabled:opacity-70"
-              >
-                {notifySaving ? "Sending..." : "Submit request"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

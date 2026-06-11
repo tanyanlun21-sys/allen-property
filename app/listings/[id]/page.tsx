@@ -562,9 +562,8 @@ export default function ListingDetailPage() {
       furnish: infoDraft?.furnish || null,
       owner_whatsapp: infoDraft?.owner_whatsapp?.trim() ? infoDraft.owner_whatsapp.trim() : null,
       raw_text: infoDraft?.raw_text?.trim() ? infoDraft.raw_text.trim() : null,
-      is_public: !!infoDraft?.is_public,
 
-      // �?Step 3：任何保存都刷新 last_update
+      // Step 3: refresh last_update on every save
       last_update: new Date().toISOString(),
     };
 
@@ -913,23 +912,6 @@ export default function ListingDetailPage() {
                   </select>
                 ) : (
                   <div>{item.status}</div>
-                )}
-              </div>
-
-              <div className="col-span-2">
-                <div className="text-xs text-zinc-400 mb-1">Publish to Showcase</div>
-                {editingInfo ? (
-                  <label className="inline-flex items-center gap-2 text-sm text-zinc-200">
-                    <input
-                      type="checkbox"
-                      checked={!!infoDraft?.is_public}
-                      onChange={(e) => setInfoDraft((d: any) => ({ ...d, is_public: e.target.checked }))}
-                      className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-cyan-400"
-                    />
-                    Publish to showcase
-                  </label>
-                ) : (
-                  <div className="text-sm text-zinc-200">{item.is_public ? "Public" : "Private"}</div>
                 )}
               </div>
 
