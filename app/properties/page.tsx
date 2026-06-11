@@ -18,11 +18,40 @@ type ShowcaseListing = {
   carparks: number | null;
   furnish: "Fully" | "Partial" | null;
   available_from: string | null;
+  next_follow_up: string | null;
   status: "Available" | "Follow-up" | string;
   _photoUrls?: string[];
 };
 
 const PUBLIC_STATUSES = ["Available", "Follow-up"] as const;
+
+function parseDateValue(date?: string | null) {
+  if (!date) return null;
+  const d = new Date(date);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function sortShowcaseListings(a: ShowcaseListing, b: ShowcaseListing) {
+  if (a.status !== b.status) {
+    return a.status === "Available" ? -1 : 1;
+  }
+
+  if (a.status === "Available") {
+    const aDate = parseDateValue(a.available_from);
+    const bDate = parseDateValue(b.available_from);
+    if (aDate && bDate) return aDate.getTime() - bDate.getTime();
+    if (aDate) return -1;
+    if (bDate) return 1;
+    return 0;
+  }
+
+  const aDate = parseDateValue(a.next_follow_up);
+  const bDate = parseDateValue(b.next_follow_up);
+  if (aDate && bDate) return aDate.getTime() - bDate.getTime();
+  if (aDate) return -1;
+  if (bDate) return 1;
+  return 0;
+}
 
 function formatDate(date?: string | null) {
   if (!date) return "Available now";
@@ -56,18 +85,48 @@ export default function PropertiesPage() {
       const { data, error } = await supabase
         .from("listings")
         .select(
-          "id,type,condo_name,area,price,sqft,bedrooms,bathrooms,carparks,furnish,available_from,status"
+          "id,type,condo_name,area,price,sqft,bedrooms,bathrooms,carparks,furnish,available_from,next_follow_up,status"
         )
-        .in("status", PUBLIC_STATUSES)
-        .order("updated_at", { ascending: false });
+        .in("status", PUBLIC_STATUSES);
 
       if (error) {
         setError(error.message);
         setItems([]);
-      } else {
-        setItems((data ?? []) as ShowcaseListing[]);
+        setLoading(false);
+        return;
       }
 
+      const rows = (data ?? []) as any[];
+      const ids = rows.map((row) => row.id);
+      const photoMap = new Map<string, string[]>();
+
+      if (ids.length > 0) {
+        const { data: photos, error: photoError } = await supabase
+          .from("listing_photos")
+          .select("listing_id,storage_path,sort_order")
+          .in("listing_id", ids)
+          .order("sort_order", { ascending: true });
+
+        if (!photoError && photos) {
+          photos.forEach((photo: any) => {
+            const list = photoMap.get(photo.listing_id) ?? [];
+            list.push(photo.storage_path);
+            photoMap.set(photo.listing_id, list);
+          });
+        }
+      }
+
+      const toUrl = (path: string) =>
+        supabase.storage.from("listing-photos").getPublicUrl(path).data.publicUrl;
+
+      const enriched = rows
+        .map((row) => ({
+          ...row,
+          _photoUrls: (photoMap.get(row.id) ?? []).map(toUrl),
+        }))
+        .sort(sortShowcaseListings);
+
+      setItems(enriched as ShowcaseListing[]);
       setLoading(false);
     };
 
