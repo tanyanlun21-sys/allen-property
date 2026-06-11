@@ -71,7 +71,7 @@ function renderCard(item: ShowcaseListing) {
   const priceLabel = item.price != null ? `${rm(item.price)}${item.type === "rent" ? " / mo" : ""}` : "-";
   const summary = [
     item.sqft ? `${item.sqft} sqft` : null,
-    item.bedrooms != null ? `${item.bedrooms}R` : null,
+    item.bedrooms != null ? (item.bedrooms === 0 ? "Studio" : `${item.bedrooms}R`) : null,
     item.bathrooms != null ? `${item.bathrooms}B` : null,
     item.carparks != null ? `${item.carparks}CP` : null,
   ]
