@@ -66,6 +66,57 @@ function publicStatusLabel(status: string) {
   return "Hidden";
 }
 
+function renderCard(item: ShowcaseListing) {
+  const status = publicStatusLabel(item.status);
+  const priceLabel = item.price != null ? `${rm(item.price)}${item.type === "rent" ? " / mo" : ""}` : "-";
+  const summary = [
+    item.sqft ? `${item.sqft} sqft` : null,
+    item.bedrooms != null ? `${item.bedrooms}R` : null,
+    item.bathrooms != null ? `${item.bathrooms}B` : null,
+    item.carparks != null ? `${item.carparks}CP` : null,
+  ]
+    .filter(Boolean)
+    .join(" • ");
+
+  return (
+    <Link
+      key={item.id}
+      href={`/properties/${item.id}`}
+      className="group overflow-hidden rounded-3xl border border-white/10 bg-[#07111D] transition hover:-translate-y-1 hover:border-cyan-400/40"
+    >
+      <div className="relative">
+        <PhotoCarousel urls={item._photoUrls ?? []} />
+        <div className="absolute inset-x-0 top-4 flex items-center justify-between gap-3 px-4">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              status === "Available"
+                ? "bg-emerald-500/20 text-emerald-200"
+                : "bg-cyan-500/20 text-cyan-200"
+            }`}
+          >
+            {status}
+          </span>
+          {item.furnish && (
+            <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-zinc-200">
+              {item.furnish}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-2 p-5">
+        <div>
+          <div className="text-lg font-semibold text-white">{item.condo_name}</div>
+          <div className="text-sm text-zinc-400">{item.area ?? "Unknown area"}</div>
+        </div>
+        <div className="text-sm font-semibold text-white">{priceLabel}</div>
+        <div className="text-sm text-zinc-300">{summary}</div>
+        <div className="text-xs uppercase tracking-[0.25em] text-zinc-500">{status}</div>
+      </div>
+    </Link>
+  );
+}
+
 export default function PropertiesPage() {
   const [items, setItems] = useState<ShowcaseListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,6 +217,11 @@ export default function PropertiesPage() {
     });
   }, [items, search, priceMin, priceMax, bedroomFilter, furnishFilter]);
 
+  const availableRent = filtered.filter((item) => item.status === "Available" && item.type === "rent");
+  const availableSale = filtered.filter((item) => item.status === "Available" && item.type === "sale");
+  const incomingRent = filtered.filter((item) => item.status === "Follow-up" && item.type === "rent");
+  const incomingSale = filtered.filter((item) => item.status === "Follow-up" && item.type === "sale");
+
   return (
     <main className="min-h-screen bg-[#05070A] text-white">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -254,56 +310,70 @@ export default function PropertiesPage() {
             No matching public listings found.
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((item) => {
-              const status = publicStatusLabel(item.status);
-              const priceLabel = item.price != null ? `${rm(item.price)}${item.type === "rent" ? " / mo" : ""}` : "-";
-              const summary = [
-                item.sqft ? `${item.sqft} sqft` : null,
-                item.bedrooms != null ? `${item.bedrooms}R` : null,
-                item.bathrooms != null ? `${item.bathrooms}B` : null,
-                item.carparks != null ? `${item.carparks}CP` : null,
-              ]
-                .filter(Boolean)
-                .join(" • ");
-              return (
-                <Link
-                  key={item.id}
-                  href={`/properties/${item.id}`}
-                  className="group overflow-hidden rounded-3xl border border-white/10 bg-[#07111D] transition hover:-translate-y-1 hover:border-cyan-400/40"
-                >
-                  <div className="relative">
-                    <PhotoCarousel urls={item._photoUrls ?? []} />
-                    <div className="absolute inset-x-0 top-4 flex items-center justify-between gap-3 px-4">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          status === "Available"
-                            ? "bg-emerald-500/20 text-emerald-200"
-                            : "bg-cyan-500/20 text-cyan-200"
-                        }`}
-                      >
-                        {status}
-                      </span>
-                      {item.furnish && (
-                        <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-zinc-200">
-                          {item.furnish}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+          <div className="space-y-12">
+            <section>
+              <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <div className="text-sm uppercase tracking-[0.3em] text-emerald-300/90">Available</div>
+                  <p className="text-sm text-zinc-400">Current available listings, sorted by the soonest available date.</p>
+                </div>
+              </div>
 
-                  <div className="space-y-2 p-5">
-                    <div>
-                      <div className="text-lg font-semibold text-white">{item.condo_name}</div>
-                      <div className="text-sm text-zinc-400">{item.area ?? "Unknown area"}</div>
-                    </div>
-                    <div className="text-sm font-semibold text-white">{priceLabel}</div>
-                    <div className="text-sm text-zinc-300">{summary}</div>
-                    <div className="text-xs uppercase tracking-[0.25em] text-zinc-500">{status}</div>
+              {availableRent.length > 0 && (
+                <div>
+                  <div className="mb-4 rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-xs uppercase tracking-[0.3em] text-cyan-300/80">
+                    Rent
                   </div>
-                </Link>
-              );
-            })}
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {availableRent.map((item) => renderCard(item))}
+                  </div>
+                </div>
+              )}
+
+              {availableSale.length > 0 && (
+                <div className="mt-8">
+                  <div className="mb-4 rounded-3xl border border-white/10 bg-[#07111D]/70 px-4 py-3 text-xs uppercase tracking-[0.3em] text-zinc-300/80">
+                    Sale
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {availableSale.map((item) => renderCard(item))}
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <div className="h-px bg-white/10" />
+
+            <section>
+              <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <div className="text-sm uppercase tracking-[0.3em] text-cyan-300/90">Incoming</div>
+                  <p className="text-sm text-zinc-400">Follow-up listings, sorted by the next follow-up date.</p>
+                </div>
+              </div>
+
+              {incomingRent.length > 0 && (
+                <div>
+                  <div className="mb-4 rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-xs uppercase tracking-[0.3em] text-cyan-300/80">
+                    Rent
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {incomingRent.map((item) => renderCard(item))}
+                  </div>
+                </div>
+              )}
+
+              {incomingSale.length > 0 && (
+                <div className="mt-8">
+                  <div className="mb-4 rounded-3xl border border-white/10 bg-[#07111D]/70 px-4 py-3 text-xs uppercase tracking-[0.3em] text-zinc-300/80">
+                    Sale
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {incomingSale.map((item) => renderCard(item))}
+                  </div>
+                </div>
+              )}
+            </section>
           </div>
         )}
       </div>
