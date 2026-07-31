@@ -1025,7 +1025,7 @@ export default function ListingDetailPage() {
               </div>
 
               <div className="col-span-2">
-                <div className="text-xs text-zinc-400 mb-1">来源电话</div>
+                <div className="text-xs text-zinc-400 mb-1">Listing From</div>
                 {editingInfo ? (
                   <input className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.source_phone ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, source_phone: e.target.value }))} placeholder="e.g. 0123456789 / 013xxxxxxx" />
                 ) : (
