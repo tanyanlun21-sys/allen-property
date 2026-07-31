@@ -27,8 +27,9 @@ type Form = {
   price: string;
   available_from: string; // yyyy-mm-dd or ""
   furnish: "" | "Fully" | "Partial";
-  raw_text: string;
   owner_whatsapp: string;
+  source_phone: string;
+  raw_text: string;
   is_studio: boolean;
 };
 
@@ -55,6 +56,7 @@ export default function NewListingPage() {
     available_from: today,
     furnish: "",
     owner_whatsapp: "",
+    source_phone: "",
     raw_text: "",
     is_studio: false,
   });
@@ -97,6 +99,7 @@ export default function NewListingPage() {
       price: toNullableNumber(form.price),
       furnish: form.furnish || null,
       owner_whatsapp: form.owner_whatsapp.trim() || null,
+      source_phone: form.source_phone.trim() || null,
       raw_text: form.raw_text.trim() ? form.raw_text.trim() : null,
       available_from: availableFrom,
 
@@ -274,6 +277,16 @@ export default function NewListingPage() {
               placeholder="e.g. 60123456789 / 0123456789"
               value={form.owner_whatsapp}
               onChange={(e) => setForm((f) => ({ ...f, owner_whatsapp: e.target.value }))}
+            />
+          </div>
+
+          <div>
+            <div className="text-xs text-zinc-400 mb-1">来源电话</div>
+            <input
+              className="w-full rounded-lg bg-zinc-800 px-3 py-2"
+              placeholder="e.g. 0123456789 / 013xxxxxxx"
+              value={form.source_phone}
+              onChange={(e) => setForm((f) => ({ ...f, source_phone: e.target.value }))}
             />
           </div>
 

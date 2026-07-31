@@ -46,6 +46,7 @@ type WorkListing = {
   raw_text: string | null;
 
   owner_whatsapp: string | null;
+  source_phone: string | null;
 
   _photoUrls?: string[];
 };
@@ -161,7 +162,7 @@ export default function ListingsPage() {
     const { data, error } = await supabase
       .from("listings")
       .select(
-        "id,type,status,condo_name,area,sqft,bedrooms,bathrooms,carparks,price,furnish,updated_at,inbox,last_update,next_follow_up,priority,raw_text,owner_whatsapp"
+        "id,type,status,condo_name,area,sqft,bedrooms,bathrooms,carparks,price,furnish,updated_at,inbox,last_update,next_follow_up,priority,raw_text,owner_whatsapp,source_phone"
       )
       .order("updated_at", { ascending: false });
 
@@ -237,6 +238,7 @@ export default function ListingsPage() {
         x.condo_name,
         x.area,
         x.owner_whatsapp,
+        x.source_phone,
         x.raw_text,
         x.status,
         x.type,
@@ -794,7 +796,8 @@ export default function ListingsPage() {
             <div className="text-xs text-zinc-500 sm:ml-auto">—</div>
           )}
         </div>
-        </div>
+
+        </div>
 
         {loading ? (
           <div className="mt-6 text-sm text-zinc-400">Loading…</div>

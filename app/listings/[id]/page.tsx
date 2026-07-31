@@ -561,6 +561,7 @@ export default function ListingDetailPage() {
       next_follow_up: infoDraft?.next_follow_up ? infoDraft.next_follow_up : null,
       furnish: infoDraft?.furnish || null,
       owner_whatsapp: infoDraft?.owner_whatsapp?.trim() ? infoDraft.owner_whatsapp.trim() : null,
+      source_phone: infoDraft?.source_phone?.trim() ? infoDraft.source_phone.trim() : null,
       raw_text: infoDraft?.raw_text?.trim() ? infoDraft.raw_text.trim() : null,
 
       // Step 3: refresh last_update on every save
@@ -1020,6 +1021,15 @@ export default function ListingDetailPage() {
                   <input className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.owner_whatsapp ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, owner_whatsapp: e.target.value }))} placeholder="e.g. 60123456789 / 0123456789" />
                 ) : (
                   <div>{item.owner_whatsapp ?? "-"}</div>
+                )}
+              </div>
+
+              <div className="col-span-2">
+                <div className="text-xs text-zinc-400 mb-1">来源电话</div>
+                {editingInfo ? (
+                  <input className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.source_phone ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, source_phone: e.target.value }))} placeholder="e.g. 0123456789 / 013xxxxxxx" />
+                ) : (
+                  <div>{item.source_phone ?? "-"}</div>
                 )}
               </div>
 

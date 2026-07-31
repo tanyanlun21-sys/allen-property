@@ -27,3 +27,16 @@ create policy "listings_delete_own"
 on public.listings for delete
 using (auth.uid() = user_id);
 
+-- Public access to listing photos for showcase
+alter table public.listing_photos enable row level security;
+
+drop policy if exists "listing_photos_select_public" on public.listing_photos;
+create policy "listing_photos_select_public"
+on public.listing_photos for select
+using (
+  listing_id IN (
+    SELECT id FROM public.listings 
+    WHERE status IN ('Available', 'Follow-up')
+  )
+);
+
