@@ -574,6 +574,17 @@ export default function ListingDetailPage() {
     await load();
   };
 
+  const changeListingFrom = (value: string) => {
+    if (value !== "__edit__") {
+      setInfoDraft((d: any) => ({ ...d, source_phone: value }));
+      return;
+    }
+
+    const edited = window.prompt("Edit listing source", infoDraft?.source_phone ?? "");
+    if (edited === null) return;
+    setInfoDraft((d: any) => ({ ...d, source_phone: edited.trim() }));
+  };
+
   const saveDeal = async () => {
     setSavingDeal(true);
     setErr(null);
@@ -1024,17 +1035,18 @@ export default function ListingDetailPage() {
               <div className="col-span-2">
                 <div className="text-xs text-zinc-400 mb-1">Listing From</div>
                 {editingInfo ? (
-                  <>
-                    <select className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={LISTING_FROM_OPTIONS.includes(infoDraft?.source_phone ?? "") ? infoDraft?.source_phone ?? "" : ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, source_phone: e.target.value }))}>
-                      <option value="">Choose listing source</option>
-                      {LISTING_FROM_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                    <input className="mt-2 w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.source_phone ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, source_phone: e.target.value }))} placeholder="Edit listing source" />
-                  </>
+                  <select className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.source_phone ?? ""} onChange={(e) => changeListingFrom(e.target.value)}>
+                    <option value="">Choose listing source</option>
+                    {infoDraft?.source_phone && !LISTING_FROM_OPTIONS.includes(infoDraft.source_phone) ? (
+                      <option value={infoDraft.source_phone}>{infoDraft.source_phone}</option>
+                    ) : null}
+                    {LISTING_FROM_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                    <option value="__edit__">Edit...</option>
+                  </select>
                 ) : (
                   <div>{item.source_phone ?? "-"}</div>
                 )}

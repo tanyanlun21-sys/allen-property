@@ -69,6 +69,17 @@ export default function NewListingPage() {
     return form.condo_name.trim().length > 0 && !saving;
   }, [form.condo_name, saving]);
 
+  const changeListingFrom = (value: string) => {
+    if (value !== "__edit__") {
+      setForm((f) => ({ ...f, source_phone: value }));
+      return;
+    }
+
+    const edited = window.prompt("Edit listing source", form.source_phone);
+    if (edited === null) return;
+    setForm((f) => ({ ...f, source_phone: edited.trim() }));
+  };
+
   const create = async () => {
     if (!form.condo_name.trim()) return;
 
@@ -284,22 +295,20 @@ export default function NewListingPage() {
             <div className="text-xs text-zinc-400 mb-1">Listing From</div>
             <select
               className="w-full rounded-lg bg-zinc-800 px-3 py-2"
-              value={LISTING_FROM_OPTIONS.includes(form.source_phone) ? form.source_phone : ""}
-              onChange={(e) => setForm((f) => ({ ...f, source_phone: e.target.value }))}
+              value={form.source_phone}
+              onChange={(e) => changeListingFrom(e.target.value)}
             >
               <option value="">Choose listing source</option>
+              {form.source_phone && !LISTING_FROM_OPTIONS.includes(form.source_phone) ? (
+                <option value={form.source_phone}>{form.source_phone}</option>
+              ) : null}
               {LISTING_FROM_OPTIONS.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
               ))}
+              <option value="__edit__">Edit...</option>
             </select>
-            <input
-              className="mt-2 w-full rounded-lg bg-zinc-800 px-3 py-2"
-              placeholder="Edit listing source"
-              value={form.source_phone}
-              onChange={(e) => setForm((f) => ({ ...f, source_phone: e.target.value }))}
-            />
           </div>
 
           <div>
