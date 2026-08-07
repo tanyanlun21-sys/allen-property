@@ -1025,12 +1025,15 @@ export default function ListingDetailPage() {
                 <div className="text-xs text-zinc-400 mb-1">Listing From</div>
                 {editingInfo ? (
                   <>
-                    <input list="listing-from-options" className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.source_phone ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, source_phone: e.target.value }))} placeholder="Choose or type listing source" />
-                    <datalist id="listing-from-options">
+                    <select className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={LISTING_FROM_OPTIONS.includes(infoDraft?.source_phone ?? "") ? infoDraft?.source_phone ?? "" : ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, source_phone: e.target.value }))}>
+                      <option value="">Choose listing source</option>
                       {LISTING_FROM_OPTIONS.map((option) => (
-                        <option key={option} value={option} />
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
                       ))}
-                    </datalist>
+                    </select>
+                    <input className="mt-2 w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.source_phone ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, source_phone: e.target.value }))} placeholder="Edit listing source" />
                   </>
                 ) : (
                   <div>{item.source_phone ?? "-"}</div>

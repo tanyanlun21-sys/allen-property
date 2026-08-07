@@ -282,18 +282,24 @@ export default function NewListingPage() {
 
           <div>
             <div className="text-xs text-zinc-400 mb-1">Listing From</div>
-            <input
-              list="listing-from-options"
+            <select
               className="w-full rounded-lg bg-zinc-800 px-3 py-2"
-              placeholder="Choose or type listing source"
+              value={LISTING_FROM_OPTIONS.includes(form.source_phone) ? form.source_phone : ""}
+              onChange={(e) => setForm((f) => ({ ...f, source_phone: e.target.value }))}
+            >
+              <option value="">Choose listing source</option>
+              {LISTING_FROM_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <input
+              className="mt-2 w-full rounded-lg bg-zinc-800 px-3 py-2"
+              placeholder="Edit listing source"
               value={form.source_phone}
               onChange={(e) => setForm((f) => ({ ...f, source_phone: e.target.value }))}
             />
-            <datalist id="listing-from-options">
-              {LISTING_FROM_OPTIONS.map((option) => (
-                <option key={option} value={option} />
-              ))}
-            </datalist>
           </div>
 
           <div>
