@@ -33,7 +33,7 @@ type ListingRow = {
   price: number | null;
 
   sqft: number | null;
-  bedrooms: number | null;
+  bedrooms: string | number | null;
   bathrooms: number | null;
   carparks: number | null;
 

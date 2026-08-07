@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { rm } from "@/lib/money";
+import { LISTING_FROM_OPTIONS, normalizeBedrooms } from "@/lib/listingOptions";
 
 type Deal = {
   gross: number;
@@ -545,11 +546,7 @@ export default function ListingDetailPage() {
       condo_name: (infoDraft.condo_name ?? "").trim(),
       area: infoDraft.area?.trim() ? infoDraft.area.trim() : null,
       sqft: infoDraft.sqft === "" ? null : Number(infoDraft.sqft) || null,
-      bedrooms: isStudioBedrooms(infoDraft.bedrooms)
-        ? 0
-        : infoDraft.bedrooms === ""
-        ? null
-        : Number(infoDraft.bedrooms) || null,
+      bedrooms: normalizeBedrooms(infoDraft.bedrooms, isStudioBedrooms(infoDraft.bedrooms)),
       bathrooms: infoDraft.bathrooms === "" ? null : Number(infoDraft.bathrooms) || null,
       carparks: infoDraft.carparks === "" ? null : Number(infoDraft.carparks) || null,
       price: infoDraft.price === "" ? null : Number(infoDraft.price) || null,
@@ -974,7 +971,7 @@ export default function ListingDetailPage() {
                 <div className="text-xs text-zinc-400 mb-1">Bedrooms</div>
                 {editingInfo ? (
                   <div className="grid grid-cols-[1fr_auto] gap-2">
-                    <input type={isStudioBedrooms(infoDraft?.bedrooms) ? "text" : "number"} disabled={isStudioBedrooms(infoDraft?.bedrooms)} className="min-w-0 rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none disabled:opacity-60" value={isStudioBedrooms(infoDraft?.bedrooms) ? "Studio" : infoDraft?.bedrooms ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, bedrooms: e.target.value }))} />
+                    <input type="text" disabled={isStudioBedrooms(infoDraft?.bedrooms)} className="min-w-0 rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none disabled:opacity-60" value={isStudioBedrooms(infoDraft?.bedrooms) ? "Studio" : infoDraft?.bedrooms ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, bedrooms: e.target.value }))} placeholder="e.g. 1 or 1+1" />
                     <button type="button" onClick={() => setInfoDraft((d: any) => ({ ...d, bedrooms: isStudioBedrooms(d?.bedrooms) ? "" : "0" }))} className={isStudioBedrooms(infoDraft?.bedrooms) ? "rounded-lg border border-cyan-300 bg-cyan-400 px-3 py-2 text-xs font-semibold text-black transition" : "rounded-lg border border-white/10 bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-700"}>
                       Studio
                     </button>
@@ -1027,7 +1024,14 @@ export default function ListingDetailPage() {
               <div className="col-span-2">
                 <div className="text-xs text-zinc-400 mb-1">Listing From</div>
                 {editingInfo ? (
-                  <input className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.source_phone ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, source_phone: e.target.value }))} placeholder="e.g. 0123456789 / 013xxxxxxx" />
+                  <>
+                    <input list="listing-from-options" className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.source_phone ?? ""} onChange={(e) => setInfoDraft((d: any) => ({ ...d, source_phone: e.target.value }))} placeholder="Choose or type listing source" />
+                    <datalist id="listing-from-options">
+                      {LISTING_FROM_OPTIONS.map((option) => (
+                        <option key={option} value={option} />
+                      ))}
+                    </datalist>
+                  </>
                 ) : (
                   <div>{item.source_phone ?? "-"}</div>
                 )}

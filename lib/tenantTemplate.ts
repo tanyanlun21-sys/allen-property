@@ -3,7 +3,7 @@ import { rm } from "@/lib/money";
 type Listing = {
   condo_name: string;
   sqft: number | null;
-  bedrooms: number | null;
+  bedrooms: string | number | null;
   bathrooms: number | null;
   carparks: number | null;
   furnish: string | null;

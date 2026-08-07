@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import { rm } from "@/lib/money";
+import { bedroomLabel, bedroomNumber } from "@/lib/listingOptions";
 
 type ListingType = "rent" | "sale";
 
@@ -28,7 +29,7 @@ type WorkListing = {
   condo_name: string;
   area: string | null;
   sqft: number | null;
-  bedrooms: number | null;
+  bedrooms: string | number | null;
   bathrooms: number | null;
   carparks: number | null;
   price: number | null;
@@ -89,6 +90,11 @@ function statusPillClass(s: ListingStatus) {
     default:
       return "bg-zinc-800 text-zinc-200";
   }
+}
+
+function bedroomSummary(value: WorkListing["bedrooms"]) {
+  const label = bedroomLabel(value);
+  return label === "Studio" || label === "-" ? label : `${label}R`;
 }
 
 function formatDT(s: string | null | undefined) {
@@ -255,11 +261,12 @@ export default function ListingsPage() {
         (priceMax === null || (x.price !== null && x.price <= priceMax));
 
       // Bedroom filter
+      const bedroomValue = bedroomNumber(x.bedrooms);
       const okBedroom =
         bedroomFilter.size === 0 ||
-        (x.bedrooms !== null &&
-          (bedroomFilter.has(x.bedrooms) ||
-            (bedroomFilter.has(5) && x.bedrooms >= 5)));
+        (bedroomValue !== null &&
+          (bedroomFilter.has(bedroomValue) ||
+            (bedroomFilter.has(5) && bedroomValue >= 5)));
 
       return okView && okType && okStatus && matchesSearch && okPrice && okBedroom;
     });
@@ -532,7 +539,7 @@ export default function ListingsPage() {
           </div>
 
           <div className="mt-1 text-sm text-zinc-300">
-            {x.sqft ? `${x.sqft} sqft` : "—"} • {x.bedrooms ?? "—"}R • {x.bathrooms ?? "—"}B •{" "}
+            {x.sqft ? `${x.sqft} sqft` : "—"} • {bedroomSummary(x.bedrooms)} • {x.bathrooms ?? "—"}B •{" "}
             {x.carparks ?? "—"}CP
           </div>
 

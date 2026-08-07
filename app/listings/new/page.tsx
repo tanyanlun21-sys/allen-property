@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { LISTING_FROM_OPTIONS, normalizeBedrooms } from "@/lib/listingOptions";
 
 type ListingType = "rent" | "sale";
 
@@ -93,7 +94,7 @@ export default function NewListingPage() {
       condo_name: form.condo_name.trim(),
       area: form.area.trim() || null,
       sqft: toNullableNumber(form.sqft),
-      bedrooms: form.is_studio ? 0 : toNullableNumber(form.bedrooms),
+      bedrooms: normalizeBedrooms(form.bedrooms, form.is_studio),
       bathrooms: toNullableNumber(form.bathrooms),
       carparks: toNullableNumber(form.carparks),
       price: toNullableNumber(form.price),
@@ -204,11 +205,10 @@ export default function NewListingPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="grid grid-cols-[1fr_auto] gap-2">
               <input
-                type={form.is_studio ? "text" : "number"}
-                inputMode="numeric"
+                type="text"
                 disabled={form.is_studio}
                 className="min-w-0 rounded-lg bg-zinc-800 px-3 py-2 disabled:opacity-60"
-                placeholder="Rooms"
+                placeholder="Rooms e.g. 1 or 1+1"
                 value={form.is_studio ? "Studio" : form.bedrooms}
                 onChange={(e) => setForm((f) => ({ ...f, bedrooms: e.target.value }))}
               />
@@ -283,11 +283,17 @@ export default function NewListingPage() {
           <div>
             <div className="text-xs text-zinc-400 mb-1">Listing From</div>
             <input
+              list="listing-from-options"
               className="w-full rounded-lg bg-zinc-800 px-3 py-2"
-              placeholder="e.g. 0123456789 / 013xxxxxxx"
+              placeholder="Choose or type listing source"
               value={form.source_phone}
               onChange={(e) => setForm((f) => ({ ...f, source_phone: e.target.value }))}
             />
+            <datalist id="listing-from-options">
+              {LISTING_FROM_OPTIONS.map((option) => (
+                <option key={option} value={option} />
+              ))}
+            </datalist>
           </div>
 
           <div>

@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import { rm } from "@/lib/money";
+import { bedroomLabel } from "@/lib/listingOptions";
 
 type ShowcaseListing = {
   id: string;
@@ -13,7 +14,7 @@ type ShowcaseListing = {
   area: string | null;
   price: number | null;
   sqft: number | null;
-  bedrooms: number | null;
+  bedrooms: string | number | null;
   bathrooms: number | null;
   carparks: number | null;
   furnish: "Fully" | "Partial" | null;
@@ -106,7 +107,7 @@ export default function PropertyDetailPage() {
     return [
       { label: "Price", value: item.price != null ? rm(item.price) : "-" },
       { label: "Sqft", value: item.sqft ?? "-" },
-      { label: "Bedrooms", value: item.bedrooms ?? "-" },
+      { label: "Bedrooms", value: bedroomLabel(item.bedrooms) },
       { label: "Bathrooms", value: item.bathrooms ?? "-" },
       { label: "Carparks", value: item.carparks ?? "-" },
       { label: "Furnish", value: item.furnish ?? "-" },

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import { rm } from "@/lib/money";
+import { bedroomLabel, bedroomNumber } from "@/lib/listingOptions";
 
 type ShowcaseListing = {
   id: string;
@@ -13,7 +14,7 @@ type ShowcaseListing = {
   area: string | null;
   price: number | null;
   sqft: number | null;
-  bedrooms: number | null;
+  bedrooms: string | number | null;
   bathrooms: number | null;
   carparks: number | null;
   furnish: "Fully" | "Partial" | null;
@@ -71,7 +72,7 @@ function renderCard(item: ShowcaseListing) {
   const priceLabel = item.price != null ? `${rm(item.price)}${item.type === "rent" ? " / mo" : ""}` : "-";
   const summary = [
     item.sqft ? `${item.sqft} sqft` : null,
-    item.bedrooms != null ? (item.bedrooms === 0 ? "Studio" : `${item.bedrooms}R`) : null,
+    item.bedrooms != null ? (bedroomLabel(item.bedrooms) === "Studio" ? "Studio" : `${bedroomLabel(item.bedrooms)}R`) : null,
     item.bathrooms != null ? `${item.bathrooms}B` : null,
     item.carparks != null ? `${item.carparks}CP` : null,
   ]
@@ -204,10 +205,11 @@ export default function PropertiesPage() {
       if (max !== null && item.price === null) return false;
 
       if (bedroomFilter !== null) {
-        if (item.bedrooms === null) return false;
+        const bedroomValue = bedroomNumber(item.bedrooms);
+        if (bedroomValue === null) return false;
         if (bedroomFilter === 5) {
-          if (item.bedrooms < 5) return false;
-        } else if (item.bedrooms !== bedroomFilter) {
+          if (bedroomValue < 5) return false;
+        } else if (bedroomValue !== bedroomFilter) {
           return false;
         }
       }
