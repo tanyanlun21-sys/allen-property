@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 const SHEET_URL =
-  "https://docs.google.com/spreadsheets/d/1nH67-HwV75zbTbTsLH1sfpbt5CigXDRk_XCEWvfZvMY/edit?pli=1&gid=33273299#gid=33273299";
+  "https://docs.google.com/spreadsheets/d/1fmLDbJGz2uMSDpgF4JEeiWzMqTp0pRpJz2FshGGMzDM/edit?gid=33273299#gid=33273299";
 
 export default function WorkingPage() {
   const [ready, setReady] = useState(false);
