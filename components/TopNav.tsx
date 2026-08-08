@@ -60,6 +60,7 @@ export default function TopNav() {
     { href: "/dashboard", label: "Dashboard" },
     { href: "/income", label: "Income" },
     { href: "/appointment", label: "Appointment" },
+    { href: "/working", label: "Working" },
   ];
 
   if (isPublicPage) return null;
