@@ -11,6 +11,7 @@ type Deal = {
   commission_rate: number;
   tenancy: number; // �?新增
   deductions: number;
+  handover_date: string | null;
   notes: string | null;
 
   // generated columns (read-only)
@@ -208,6 +209,7 @@ export default function ListingDetailPage() {
   commission_rate: 0,
   tenancy: 0, // �?新增
   deductions: 0,
+  handover_date: "",
   notes: "",
 });
 
@@ -271,21 +273,22 @@ export default function ListingDetailPage() {
 
     const { data: d, error: dErr } = await supabase
       .from("deals")
-      .select("gross,commission_rate,tenancy,deductions,notes,commission_amount,net")
+      .select("gross,commission_rate,tenancy,deductions,handover_date,notes,commission_amount,net")
       .eq("listing_id", id)
       .maybeSingle();
 
     if (dErr) {
       setErr(dErr.message);
-      setDeal({ gross: 0, commission_rate: 0, tenancy: 0, deductions: 0, notes: "" });
+      setDeal({ gross: 0, commission_rate: 0, tenancy: 0, deductions: 0, handover_date: "", notes: "" });
     } else if (!d) {
-      setDeal({ gross: 0, commission_rate: 0, tenancy: 0,deductions: 0, notes: "" });
+      setDeal({ gross: 0, commission_rate: 0, tenancy: 0,deductions: 0, handover_date: "", notes: "" });
     } else {
       setDeal({
         gross: safeNum(d.gross),
         commission_rate: clampPercent(d.commission_rate),
         tenancy: safeNum(d.tenancy),
         deductions: safeNum(d.deductions),
+        handover_date: d.handover_date ?? "",
         notes: d.notes ?? "",
         commission_amount: safeNum(d.commission_amount),
         net: safeNum(d.net),
@@ -601,6 +604,7 @@ export default function ListingDetailPage() {
         commission_rate: clampPercent(deal.commission_rate),
         tenancy: safeNum(deal.tenancy),
         deductions: safeNum(deal.deductions),
+        handover_date: deal.handover_date || null,
         notes: deal.notes?.trim() ? deal.notes : null,
       },
       { onConflict: "listing_id" }
@@ -1120,6 +1124,16 @@ export default function ListingDetailPage() {
                   onChange={(e) => setDeal((d) => ({ ...d, tenancy: safeNum(e.target.value) }))}
                 />
               </div>
+            </div>
+
+            <div>
+              <div className="text-xs text-zinc-400 mb-1">Handover Date</div>
+              <input
+                type="date"
+                className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+                value={deal.handover_date ?? ""}
+                onChange={(e) => setDeal((d) => ({ ...d, handover_date: e.target.value }))}
+              />
             </div>
 
             <div className="rounded-lg bg-zinc-800 px-3 py-2 text-sm space-y-1">
