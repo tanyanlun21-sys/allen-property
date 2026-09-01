@@ -117,16 +117,30 @@ export default function IncomePage() {
   const [newOpen, setNewOpen] = useState(false);
   const [newDeal, setNewDeal] = useState<NewDealForm>(() => blankNewDeal());
 
+  // Editing state for manual deals (those without a listing_id)
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingDeal, setEditingDeal] = useState<DealRow | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+
   const [deals, setDeals] = useState<DealRow[]>([]);
   const [listingMap, setListingMap] = useState<Map<string, ListingRow>>(new Map());
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }: any) => {
       const id = data.user?.id ?? null;
       setUserId(id);
       if (!id) window.location.href = "/";
     });
   }, []);
+
+  // Debug: log when the edit modal open state or editingDeal changes
+  useEffect(() => {
+    try {
+      console.debug('Income: edit state changed', { editOpen, editingDeal });
+    } catch (e) {
+      // ignore
+    }
+  }, [editOpen, editingDeal]);
 
   const filteredDeals = useMemo(() => {
     let from = "";
@@ -185,6 +199,8 @@ export default function IncomePage() {
 
     const rows = (d ?? []) as DealRow[];
     setDeals(rows);
+    // Debug: log top rows to inspect structure for newly-created records
+    try { console.debug('load: deals loaded', rows.slice(0, 10)); } catch (e) { console.debug('load: deals loaded (unable to slice)'); }
 
     const ids = Array.from(new Set(rows.map((x) => x.listing_id).filter(Boolean))) as string[];
     if (ids.length === 0) {
@@ -273,11 +289,64 @@ export default function IncomePage() {
     });
 
     setSavingNew(false);
+    console.debug('saveNewDeal result', res);
     if (res.error) return setErr(res.error.message);
 
     setNewOpen(false);
     setNewDeal(blankNewDeal());
     await load();
+  };
+
+  const saveEditedDeal = async () => {
+    if (!userId) return;
+    if (!editingDeal) return;
+    if (!editingDeal.deal_title || !editingDeal.deal_title.trim()) {
+      setErr("Please enter a unit / deal name.");
+      return;
+    }
+
+    setSavingEdit(true);
+    console.debug('saveEditedDeal updating', editingDeal);
+    setErr(null);
+
+    const res = await supabase.from("deals").update({
+      deal_title: editingDeal.deal_title.trim(),
+      deal_type: editingDeal.deal_type,
+      handover_date: editingDeal.handover_date || null,
+      gross: safeNum(editingDeal.gross),
+      commission_rate: clampPercent(editingDeal.commission_rate),
+      tenancy: safeNum(editingDeal.tenancy),
+      deductions: safeNum(editingDeal.deductions),
+      notes: editingDeal.notes?.trim() ? editingDeal.notes : null,
+    }).eq("id", editingDeal.id);
+
+    setSavingEdit(false);
+    console.debug('saveEditedDeal result', res);
+    if (res.error) return setErr(res.error.message);
+
+    setEditOpen(false);
+    setEditingDeal(null);
+    await load();
+  };
+
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteDeal = async () => {
+    if (!userId) return;
+    if (!editingDeal || !editingDeal.id) { setErr("Cannot delete this deal."); return; }
+    if (!confirm("Are you sure you want to delete this deal? This action cannot be undone.")) return;
+    setDeleting(true);
+    const res = await supabase.from("deals").delete().eq("id", editingDeal.id);
+    setDeleting(false);
+    if (res.error) {
+      setErr(res.error.message);
+      return;
+    }
+    // Close modal and remove from local state
+    const deletedId = editingDeal.id;
+    setEditOpen(false);
+    setEditingDeal(null);
+    setDeals((prev) => prev.filter((d) => d.id !== deletedId));
   };
 
   return (
@@ -425,7 +494,7 @@ export default function IncomePage() {
               </div>
             </div>
 
-            <div className={`mt-6 ${CARD} p-4 overflow-x-auto`}>
+            <div className={`mt-6 ${CARD} p-4`}>
               <table className="w-full text-sm">
                 <thead className="text-xs uppercase tracking-wider text-[#FFD36A]/90 bg-[#0E0E0E] border-b border-[#D4AF37]/20">
                   <tr className="text-left">
@@ -453,7 +522,15 @@ export default function IncomePage() {
                     return (
                       <tr
                         key={`${x.id ?? x.listing_id ?? "deal"}-${idx}-${x.updated_at}`}
-                        className="border-b border-white/5 hover:bg-[#D4AF37]/5 transition"
+                        className="border-b border-white/5 hover:bg-[#D4AF37]/5 transition cursor-pointer"
+                        onClick={() => {
+                          if (x.listing_id) {
+                            window.location.href = `/listings/${x.listing_id}`;
+                          } else {
+                            setEditingDeal(x);
+                            setEditOpen(true);
+                          }
+                        }}
                       >
                         <td className="py-3 pr-4 text-zinc-300">{displayDate(x.handover_date) || "-"}</td>
                         <td className="py-3 pr-4 text-zinc-400">
@@ -465,13 +542,16 @@ export default function IncomePage() {
                           </span>
                         </td>
                         <td className="py-3 pr-4 min-w-48">
-                          {x.listing_id ? (
-                            <Link href={`/listings/${x.listing_id}`} className="text-white hover:text-[#FFD36A]">
-                              {title}
-                            </Link>
-                          ) : (
-                            <span>{title}</span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {x.listing_id ? (
+                              <Link href={`/listings/${x.listing_id}`} className="text-white hover:text-[#FFD36A]" onClick={(e) => e.stopPropagation()}>
+                                {title}
+                              </Link>
+                            ) : (
+                              <span>{title}</span>
+                            )}
+
+                          </div>
                         </td>
                         <td className="py-3 pr-4 text-[#FFF2C2] font-semibold">
                           {rm(safeNum(x.gross))}
@@ -615,6 +695,136 @@ export default function IncomePage() {
           </div>
         </div>
       )}
+
+      {editOpen && editingDeal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4">
+          <div className="w-full max-w-xl rounded-2xl border border-[#D4AF37]/30 bg-[#101010] p-5 shadow-[0_20px_70px_rgba(0,0,0,0.75)]">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-base font-semibold">Edit income</div>
+              <button
+                type="button"
+                onClick={() => { setEditOpen(false); setEditingDeal(null); }}
+                className="rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-zinc-200 hover:bg-white/10"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <div className="text-xs text-zinc-400 mb-1">Unit / Deal name</div>
+                <input
+                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+                  value={editingDeal.deal_title ?? ""}
+                  onChange={(e) => setEditingDeal((d) => (d ? { ...d, deal_title: e.target.value } : d))}
+                  placeholder="e.g. Colleague unit - Mossaz Q-03-01"
+                />
+              </div>
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Type</div>
+                <select
+                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+                  value={editingDeal.deal_type ?? "rent"}
+                  onChange={(e) => setEditingDeal((d) => (d ? { ...d, deal_type: e.target.value as ListingType } : d))}
+                >
+                  <option value="rent">Rent</option>
+                  <option value="sale">Sale</option>
+                </select>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Handover Date</div>
+                <input
+                  type="date"
+                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+                  value={editingDeal.handover_date ?? ""}
+                  onChange={(e) => setEditingDeal((d) => (d ? { ...d, handover_date: e.target.value } : d))}
+                />
+              </div>
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Gross (RM)</div>
+                <input
+                  type="number"
+                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+                  value={editingDeal.gross === 0 ? "" : String(editingDeal.gross ?? "")}
+                  onChange={(e) => setEditingDeal((d) => (d ? { ...d, gross: safeNum(e.target.value) } : d))}
+                />
+              </div>
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Commission (%)</div>
+                <input
+                  type="number"
+                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+                  value={editingDeal.commission_rate === 0 ? "" : String(editingDeal.commission_rate ?? "")}
+                  onChange={(e) => setEditingDeal((d) => (d ? { ...d, commission_rate: clampPercent(e.target.value) } : d))}
+                />
+              </div>
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Deductions (RM)</div>
+                <input
+                  type="number"
+                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+                  value={editingDeal.deductions === 0 ? "" : String(editingDeal.deductions ?? "")}
+                  onChange={(e) => setEditingDeal((d) => (d ? { ...d, deductions: safeNum(e.target.value) } : d))}
+                />
+              </div>
+              <div>
+                <div className="text-xs text-zinc-400 mb-1">Tenancy (RM)</div>
+                <input
+                  type="number"
+                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+                  value={editingDeal.tenancy === 0 ? "" : String(editingDeal.tenancy ?? "")}
+                  onChange={(e) => setEditingDeal((d) => (d ? { ...d, tenancy: safeNum(e.target.value) } : d))}
+                />
+              </div>
+              <div className="col-span-2 rounded-lg bg-zinc-800 px-3 py-2 text-sm space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-300">Commission (RM):</span>
+                  <span className="font-semibold text-white">
+                    {rm(commissionAmount(editingDeal.gross ?? 0, editingDeal.commission_rate ?? 0))}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-300">Tenancy Fee:</span>
+                  <span className="font-semibold text-white">{rm(editingDeal.tenancy ?? 0)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-300">Net:</span>
+                  <span className="font-semibold text-white">
+                    {rm(netAmount(editingDeal.gross ?? 0, editingDeal.commission_rate ?? 0, editingDeal.tenancy ?? 0, editingDeal.deductions ?? 0))}
+                  </span>
+                </div>
+              </div>
+              <div className="col-span-2">
+                <div className="text-xs text-zinc-400 mb-1">Notes</div>
+                <textarea
+                  className="w-full min-h-20 rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+                  value={editingDeal.notes ?? ""}
+                  onChange={(e) => setEditingDeal((d) => (d ? { ...d, notes: e.target.value } : d))}
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={deleteDeal}
+              disabled={deleting}
+              className="mt-4 w-full rounded-lg px-3 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-500 shadow-[0_6px_18px_rgba(220,38,38,0.25)] transition-all duration-150 active:scale-[0.97] disabled:opacity-40 disabled:shadow-none"
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </button>
+
+            <button
+              type="button"
+              onClick={saveEditedDeal}
+              disabled={savingEdit}
+              className="mt-2 w-full rounded-lg px-3 py-2 text-sm font-semibold text-black bg-cyan-400 hover:bg-cyan-300 shadow-[0_6px_18px_rgba(34,211,238,0.35)] transition-all duration-150 active:scale-[0.97] disabled:opacity-40 disabled:shadow-none"
+            >
+              {savingEdit ? "Saving..." : "Save changes"}
+            </button>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }

@@ -154,7 +154,7 @@ export default function ListingsPage() {
   const [priceMax, setPriceMax] = useState<number | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }: any) => {
       const id = data.user?.id ?? null;
       setUserId(id);
       if (!id) window.location.href = "/";

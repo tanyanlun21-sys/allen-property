@@ -12,7 +12,7 @@ export default function HomePage() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }: any) => {
       setUser(data.user ?? null);
       setChecking(false);
     });

@@ -10,7 +10,7 @@ export default function WorkingPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }: any) => {
       if (!data.user) {
         window.location.href = "/";
         return;

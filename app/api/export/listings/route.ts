@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // ⚠️ 必须是 service role
-);
+// Create server-side Supabase client only when environment variables are present.
+// During build in environments without env vars, avoid instantiating createClient to prevent runtime errors.
+const supabase =
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
+    : null;
 
 function safe(v: any) {
   if (v === null || v === undefined) return "";
@@ -24,6 +26,13 @@ function toCSV(rows: any[]) {
 }
 
 export async function GET() {
+  if (!supabase) {
+    return NextResponse.json(
+      { error: "Supabase environment variables not provided; export route unavailable." },
+      { status: 500 }
+    );
+  }
+
   // 1) listings
   const { data: listings, error: lErr } = await supabase
     .from("listings")

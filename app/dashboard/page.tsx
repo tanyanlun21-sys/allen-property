@@ -129,7 +129,7 @@ export default function DashboardPage() {
   const [month, setMonth] = useState(() => monthKey(new Date()));
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }: any) => {
       const id = data.user?.id ?? null;
       setUserId(id);
       if (!id) window.location.href = "/";

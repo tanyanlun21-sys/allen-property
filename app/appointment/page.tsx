@@ -101,7 +101,7 @@ export default function AppointmentPage() {
   });
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }: any) => {
       const id = data.user?.id ?? null;
       setUserId(id);
       if (!id) window.location.href = "/";
