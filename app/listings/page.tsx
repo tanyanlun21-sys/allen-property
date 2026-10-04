@@ -132,8 +132,16 @@ export default function ListingsPage() {
   const [status, setStatus] = useState<StatusFilter>("all");
   const [statusOpen, setStatusOpen] = useState(false);
   const rentSectionRef = useRef<HTMLDivElement | null>(null);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return (
+      new URLSearchParams(window.location.search).get("search") ??
+      window.sessionStorage.getItem("listingsSearch") ??
+      ""
+    );
+  });
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   // Filter Modal
   const [filterModalOpen, setFilterModalOpen] = useState(false);
@@ -159,6 +167,12 @@ export default function ListingsPage() {
       setUserId(id);
       if (!id) window.location.href = "/";
     });
+
+    const savedSearch = window.sessionStorage.getItem("listingsSearch");
+    if (savedSearch) {
+      setSearch(savedSearch);
+      window.sessionStorage.removeItem("listingsSearch");
+    }
   }, []);
 
   const load = async () => {
@@ -345,8 +359,41 @@ export default function ListingsPage() {
     setBusyId(null);
   };
 
+  const unmarkAdvertisedAll = async () => {
+    const advertisedItems = filtered.filter((x) => (x.raw_text || "").includes("[ADVERTISED]"));
+    if (advertisedItems.length === 0) return;
+
+    setBulkBusy(true);
+
+    const updates = advertisedItems.map((item) => ({
+      id: item.id,
+      raw_text: (item.raw_text || "").replaceAll("[ADVERTISED]", "").trim(),
+    }));
+
+    const results = await Promise.all(
+      updates.map((update) =>
+        supabase.from("listings").update({ raw_text: update.raw_text }).eq("id", update.id)
+      )
+    );
+    const error = results.find((result) => result.error)?.error;
+
+    if (error) {
+      console.error("Unmark advertised all error:", error);
+    } else {
+      setItems((prev) =>
+        prev.map((x) => {
+          const update = updates.find((u) => u.id === x.id);
+          return update ? { ...x, raw_text: update.raw_text } : x;
+        })
+      );
+    }
+
+    setBulkBusy(false);
+  };
+
   const hasActiveFilter = priceMin !== null || priceMax !== null || bedroomFilter.size > 0;
   const activeFilterCount = (priceMin !== null ? 1 : 0) + (priceMax !== null ? 1 : 0) + (bedroomFilter.size > 0 ? 1 : 0);
+  const advertisedFilteredCount = filtered.filter((x) => (x.raw_text || "").includes("[ADVERTISED]")).length;
 
   const handleApplyFilters = () => {
     const min = priceMinInput.trim() ? parseInt(priceMinInput, 10) : null;
@@ -793,6 +840,16 @@ export default function ListingsPage() {
             shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
           >
             Refresh
+          </button>
+
+          <button
+            type="button"
+            onClick={unmarkAdvertisedAll}
+            disabled={bulkBusy || advertisedFilteredCount === 0}
+            className="rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-sm font-semibold text-zinc-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40
+            shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
+          >
+            {bulkBusy ? "Updating..." : `Unmark Advertised All${advertisedFilteredCount ? ` (${advertisedFilteredCount})` : ""}`}
           </button>
 
           {counts.dueCount > 0 ? (

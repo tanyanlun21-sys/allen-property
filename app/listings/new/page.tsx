@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { LISTING_FROM_OPTIONS, normalizeBedrooms } from "@/lib/listingOptions";
 
@@ -64,6 +64,7 @@ export default function NewListingPage() {
 
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [areaOptions, setAreaOptions] = useState<string[]>([]);
 
   const canCreate = useMemo(() => {
     return form.condo_name.trim().length > 0 && !saving;
@@ -79,6 +80,42 @@ export default function NewListingPage() {
     if (edited === null) return;
     setForm((f) => ({ ...f, source_phone: edited.trim() }));
   };
+
+  const changeArea = (value: string) => {
+    if (value === "__custom__") {
+      setForm((f) => ({ ...f, area: "" }));
+      return;
+    }
+
+    setForm((f) => ({ ...f, area: value }));
+  };
+
+  useEffect(() => {
+    const loadAreas = async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const userId = u.user?.id;
+      if (!userId) return;
+
+      const { data } = await supabase
+        .from("listings")
+        .select("area")
+        .eq("user_id", userId)
+        .not("area", "is", null)
+        .order("area", { ascending: true });
+
+      const areas = Array.from(
+        new Set(
+          ((data ?? []) as { area: string | null }[])
+            .map((x) => x.area?.trim())
+            .filter((area): area is string => Boolean(area))
+        )
+      );
+
+      setAreaOptions(areas);
+    };
+
+    loadAreas();
+  }, []);
 
   const create = async () => {
     if (!form.condo_name.trim()) return;
@@ -187,12 +224,27 @@ export default function NewListingPage() {
             onChange={(e) => setForm((f) => ({ ...f, condo_name: e.target.value }))}
           />
 
-          <input
-            className="w-full rounded-lg bg-zinc-800 px-3 py-2"
-            placeholder="Area"
-            value={form.area}
-            onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
-          />
+          <div className="space-y-2">
+            <select
+              className="w-full rounded-lg bg-zinc-800 px-3 py-2"
+              value={areaOptions.includes(form.area) ? form.area : "__custom__"}
+              onChange={(e) => changeArea(e.target.value)}
+            >
+              <option value="__custom__">Type new area</option>
+              {areaOptions.map((area) => (
+                <option key={area} value={area}>
+                  {area}
+                </option>
+              ))}
+            </select>
+
+            <input
+              className="w-full rounded-lg bg-zinc-800 px-3 py-2"
+              placeholder="Area"
+              value={form.area}
+              onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
+            />
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <input
