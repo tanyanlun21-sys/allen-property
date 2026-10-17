@@ -72,7 +72,7 @@ export default function ListingsPage() {
   const [err, setErr] = useState<string | null>(null);
 
   const [typeTab, setTypeTab] = useState<"all" | "rent" | "sale">("all");
-  const [status, setStatus] = useState<StatusFilter>("all");
+  const [status, setStatus] = useState<StatusFilter>("Available");
   const [statusOpen, setStatusOpen] = useState(false);
   const rentSectionRef = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState(() => {
