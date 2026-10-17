@@ -39,7 +39,6 @@ type WorkListing = {
   _photoUrls?: string[];
 };
 
-type ViewTab = "inbox" | "active" | "all";
 type StatusFilter = "all" | "Available" | "Inactive" | "Closed";
 
 const STATUS_OPTIONS: Exclude<StatusFilter, "all">[] = ["Available", "Inactive", "Closed"];
@@ -72,7 +71,6 @@ export default function ListingsPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  const [viewTab, setViewTab] = useState<ViewTab>("active");
   const [typeTab, setTypeTab] = useState<"all" | "rent" | "sale">("all");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [statusOpen, setStatusOpen] = useState(false);
@@ -179,20 +177,12 @@ export default function ListingsPage() {
   }, [userId]);
 
   const counts = useMemo(() => {
-    const inboxCount = items.filter((x) => x.inbox).length;
     const dueCount = items.filter((x) => !!x.next_follow_up && isDueTodayOrPast(x.next_follow_up)).length;
-    return { inboxCount, dueCount };
+    return { dueCount };
   }, [items]);
 
   const filtered = useMemo(() => {
     const base = items.filter((x) => {
-      const okView =
-        viewTab === "all"
-          ? true
-          : viewTab === "inbox"
-          ? x.inbox === true
-          : !["Closed", "Inactive"].includes(x.status);
-
       const okType = typeTab === "all" ? true : x.type === typeTab;
       const okStatus = status === "all" ? true : x.status === status;
       const terms = search.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -225,7 +215,7 @@ export default function ListingsPage() {
           (bedroomFilter.has(bedroomValue) ||
             (bedroomFilter.has(5) && bedroomValue >= 5)));
 
-      return okView && okType && okStatus && matchesSearch && okPrice && okBedroom;
+      return okType && okStatus && matchesSearch && okPrice && okBedroom;
     });
 
     const followUps = base.filter((x) => x.status === "Follow-up");
@@ -252,7 +242,7 @@ export default function ListingsPage() {
       ...sortNewestFirst(rents),
       ...sortNewestFirst(sales),
     ];
-  }, [items, viewTab, typeTab, status, search, priceMin, priceMax, bedroomFilter]);
+  }, [items, typeTab, status, search, priceMin, priceMax, bedroomFilter]);
 
   const markProcessed = async (id: string) => {
     setBusyId(id);
@@ -687,29 +677,6 @@ export default function ListingsPage() {
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <div className="flex rounded-lg bg-white/5 border border-white/10 backdrop-blur p-1
-          shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
-            {(
-              [
-                { key: "inbox", label: `Inbox (${counts.inboxCount})` },
-                { key: "active", label: `Active` },
-                { key: "all", label: `All` },
-              ] as const
-            ).map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setViewTab(t.key)}
-                className={`rounded-md px-3 py-1 text-sm transition-all duration-200 ${
-                  viewTab === t.key
-                    ? "bg-cyan-400 text-black font-semibold shadow-[0_10px_30px_rgba(34,211,238,0.25)]"
-                    : "text-zinc-300 hover:text-black hover:bg-cyan-300/80"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
           <div className="flex rounded-lg bg-white/5 border border-white/10 backdrop-blur p-1
           shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             {(["all", "rent", "sale"] as const).map((t) => (
