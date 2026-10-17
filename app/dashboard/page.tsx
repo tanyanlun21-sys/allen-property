@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { rm } from "@/lib/money";
+import { availabilityLabel } from "@/lib/availability";
 
 type ListingType = "rent" | "sale";
 type TypeFilter = "all" | "rent" | "sale";
@@ -45,6 +46,8 @@ type ListingRow = {
   last_contact?: string | null;
   next_follow_up?: string | null; // date or timestamp
   available_from?: string | null;
+  owner_whatsapp?: string | null;
+  raw_text?: string | null;
   priority?: number | null;
 
   updated_at: string;
@@ -57,6 +60,8 @@ type DealRow = {
   deductions: number | null;
   updated_at: string;
 };
+
+const AREA_ORDER_STORAGE_KEY = "dashboardAreaOrder";
 
 function safeNum(v: any) {
   const n = Number(v);
@@ -119,6 +124,9 @@ function nextMonthStartISO(ym: string) {
   const [y, m] = ym.split("-").map(Number);
   return new Date(y, m, 1, 0, 0, 0, 0).toISOString();
 }
+function listingRemark(value?: string | null) {
+  return (value ?? "").replace(/\[ADVERTISED\]/gi, "").trim();
+}
 
 export default function DashboardPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -129,6 +137,9 @@ export default function DashboardPage() {
 
   const [listings, setListings] = useState<ListingRow[]>([]);
   const [deals, setDeals] = useState<DealRow[]>([]);
+  const [areaOrder, setAreaOrder] = useState<string[]>([]);
+  const [draggedArea, setDraggedArea] = useState<string | null>(null);
+  const [areaSearch, setAreaSearch] = useState("");
 
   // pipeline month selector（默认本月）
   const [month, setMonth] = useState(() => monthKey(new Date()));
@@ -139,6 +150,18 @@ export default function DashboardPage() {
       setUserId(id);
       if (!id) window.location.href = "/";
     });
+
+    const savedAreaOrder = window.localStorage.getItem(AREA_ORDER_STORAGE_KEY);
+    if (savedAreaOrder) {
+      try {
+        const parsed = JSON.parse(savedAreaOrder);
+        if (Array.isArray(parsed)) {
+          setAreaOrder(parsed.filter((x) => typeof x === "string"));
+        }
+      } catch {
+        window.localStorage.removeItem(AREA_ORDER_STORAGE_KEY);
+      }
+    }
   }, []);
 
   const load = async () => {
@@ -153,7 +176,7 @@ export default function DashboardPage() {
       const { data: ls, error: lsErr } = await supabase
         .from("listings")
         .select(
-          "id,user_id,type,status,condo_name,area,price,sqft,bedrooms,bathrooms,carparks,furnish,inbox,last_update,last_contact,next_follow_up,available_from,priority,updated_at"
+          "id,user_id,type,status,condo_name,area,price,sqft,bedrooms,bathrooms,carparks,furnish,inbox,last_update,last_contact,next_follow_up,available_from,owner_whatsapp,raw_text,priority,updated_at"
         )
         .eq("user_id", userId)
         .order("updated_at", { ascending: false });
@@ -271,10 +294,53 @@ export default function DashboardPage() {
       counts.set(area, (counts.get(area) ?? 0) + 1);
     });
 
-    return Array.from(counts.entries())
+    const defaultSorted = Array.from(counts.entries())
       .map(([area, count]) => ({ area, count }))
       .sort((a, b) => b.count - a.count || a.area.localeCompare(b.area));
-  }, [activeFilteredListings]);
+
+    if (areaOrder.length === 0) return defaultSorted;
+
+    const orderMap = new Map(areaOrder.map((area, index) => [area, index]));
+    return [...defaultSorted].sort((a, b) => {
+      const ai = orderMap.get(a.area);
+      const bi = orderMap.get(b.area);
+      if (ai !== undefined && bi !== undefined) return ai - bi;
+      if (ai !== undefined) return -1;
+      if (bi !== undefined) return 1;
+      return (
+        defaultSorted.findIndex((item) => item.area === a.area) -
+        defaultSorted.findIndex((item) => item.area === b.area)
+      );
+    });
+  }, [activeFilteredListings, areaOrder]);
+
+  const filteredAreaSummary = useMemo(() => {
+    const query = areaSearch.trim().toLowerCase();
+    return query
+      ? areaSummary.filter(({ area }) => area.toLowerCase().includes(query))
+      : areaSummary;
+  }, [areaSummary, areaSearch]);
+
+  const moveArea = (fromArea: string, toArea: string) => {
+    if (fromArea === toArea) return;
+
+    const currentAreas = areaSummary.map((item) => item.area);
+    const orderedAreas = [
+      ...areaOrder.filter((area) => currentAreas.includes(area)),
+      ...currentAreas.filter((area) => !areaOrder.includes(area)),
+    ];
+
+    const fromIndex = orderedAreas.indexOf(fromArea);
+    const toIndex = orderedAreas.indexOf(toArea);
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const nextOrder = [...orderedAreas];
+    const [moved] = nextOrder.splice(fromIndex, 1);
+    nextOrder.splice(toIndex, 0, moved);
+
+    setAreaOrder(nextOrder);
+    window.localStorage.setItem(AREA_ORDER_STORAGE_KEY, JSON.stringify(nextOrder));
+  };
 
   const todayTouched = useMemo(() => {
     // 今天有动作：last_update 在今天
@@ -379,16 +445,60 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
         {areaSummary.length > 0 && (
           <div className="mt-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-4
           shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
-            <div className="mb-3 text-sm font-semibold text-zinc-200">Active listings by area</div>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+                <div className="text-sm font-semibold text-zinc-200">Active listings by area</div>
+                <input
+                  type="search"
+                  value={areaSearch}
+                  onChange={(e) => setAreaSearch(e.target.value)}
+                  placeholder="Search area..."
+                  aria-label="Search active listings by area"
+                  className="w-full max-w-xs rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-cyan-400/50"
+                />
+              </div>
+              <div className="rounded-lg border border-yellow-300/25 bg-yellow-300/10 px-3 py-1 text-xs font-semibold text-zinc-300">
+                Total{" "}
+                <span className="text-base font-bold text-yellow-200 tabular-nums drop-shadow-[0_0_10px_rgba(250,204,21,0.45)]">
+                  {filteredAreaSummary.reduce((sum, item) => sum + item.count, 0)}
+                </span>{" "}
+                Units
+              </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {areaSummary.map(({ area, count }) => (
-                <Link
+              {filteredAreaSummary.map(({ area, count }) => (
+                <div
                   key={area}
-                  href={`/listings?search=${encodeURIComponent(area)}`}
-                  onClick={() => window.sessionStorage.setItem("listingsSearch", area)}
-                  className="group grid grid-cols-[minmax(0,1fr)_1px_112px] items-center rounded-lg border border-white/10 bg-zinc-950/70 px-4 py-3 text-sm text-zinc-200 transition hover:border-cyan-300/50 hover:bg-cyan-400/10 hover:text-cyan-100"
+                  draggable
+                  onDragStart={(e) => {
+                    setDraggedArea(area);
+                    e.dataTransfer.effectAllowed = "move";
+                    e.dataTransfer.setData("text/plain", area);
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const fromArea = draggedArea ?? e.dataTransfer.getData("text/plain");
+                    if (fromArea) moveArea(fromArea, area);
+                    setDraggedArea(null);
+                  }}
+                  onDragEnd={() => setDraggedArea(null)}
+                  className={`group grid cursor-move grid-cols-[minmax(0,1fr)_1px_112px] items-center rounded-lg border px-4 py-3 text-sm text-zinc-200 transition hover:border-cyan-300/50 hover:bg-cyan-400/10 hover:text-cyan-100 ${
+                    draggedArea === area
+                      ? "border-cyan-300/70 bg-cyan-400/15"
+                      : "border-white/10 bg-zinc-950/70"
+                  }`}
                 >
-                  <span className="truncate font-semibold">{area}</span>
+                  <Link
+                    href={`/listings?search=${encodeURIComponent(area)}`}
+                    onClick={() => window.sessionStorage.setItem("listingsSearch", area)}
+                    className="truncate font-semibold hover:text-cyan-100"
+                  >
+                    {area}
+                  </Link>
                   <span className="h-5 w-px bg-white/20 group-hover:bg-cyan-300/45" />
                   <span className="justify-self-end whitespace-nowrap text-sm font-semibold text-zinc-400 group-hover:text-cyan-100">
                     <span className="text-lg font-bold text-yellow-200 tabular-nums drop-shadow-[0_0_10px_rgba(250,204,21,0.45)]">
@@ -396,8 +506,11 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
                     </span>{" "}
                     Unit{count === 1 ? "" : "s"}
                   </span>
-                </Link>
+                </div>
               ))}
+              {filteredAreaSummary.length === 0 && (
+                <div className="text-sm text-zinc-400">No matching areas.</div>
+              )}
             </div>
           </div>
         )}
@@ -434,7 +547,7 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
         </div>
 
         {/* Main blocks */}
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="mt-6">
           {/* Today actions */}
           <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
           shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
@@ -458,25 +571,25 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
                       Available Soon within 30 days
                     </div>
                     {availableSoonWithin30.slice(0, 6).map((x) => {
-                      const availDate = parseDateAny(x.available_from ?? null);
-                      const days = availDate ? daysBetween(parseDateAny(todayISO)!, availDate) : null;
-
                       return (
                         <div key={`soon-${x.id}`} className="rounded-xl bg-zinc-950 p-4">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <div className="text-sm font-semibold line-clamp-1">{x.condo_name}</div>
                               <div className="text-xs text-zinc-400 line-clamp-1">{x.area ?? "—"}</div>
-                              <div className="mt-2 flex flex-wrap gap-2">
-                                <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-200">
-                                  Available: {availDate ? toISODate(availDate) : "Unknown"}
-                                </span>
-                                {days !== null && (
-                                  <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-cyan-200">
-                                    {days} day{days === 1 ? "" : "s"}
-                                  </span>
-                                )}
+                              <div className="mt-2 text-xs text-cyan-100">
+                                Available: {availabilityLabel(x.available_from)}
                               </div>
+                              {listingRemark(x.raw_text) && (
+                                <div className="mt-2 whitespace-pre-line text-xs text-zinc-300">
+                                  <span className="text-zinc-500">Remark: </span>{listingRemark(x.raw_text)}
+                                </div>
+                              )}
+                              {x.owner_whatsapp && (
+                                <div className="mt-1 text-xs text-zinc-300">
+                                  <span className="text-zinc-500">Owner: </span>{x.owner_whatsapp}
+                                </div>
+                              )}
                             </div>
                             <a
                               href={`/listings/${x.id}`}
@@ -507,13 +620,20 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
                             <div className="text-sm font-semibold line-clamp-1">{x.condo_name}</div>
                             <div className="text-xs text-zinc-400 line-clamp-1">{x.area ?? "—"}</div>
                             <div className="mt-2 flex flex-wrap gap-2">
-                              <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-200">
-                                {String(x.status)}
-                              </span>
                               <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-yellow-200">
                                 {aging} days
                               </span>
                             </div>
+                            {listingRemark(x.raw_text) && (
+                              <div className="mt-2 whitespace-pre-line text-xs text-zinc-300">
+                                <span className="text-zinc-500">Remark: </span>{listingRemark(x.raw_text)}
+                              </div>
+                            )}
+                            {x.owner_whatsapp && (
+                              <div className="mt-1 text-xs text-zinc-300">
+                                <span className="text-zinc-500">Owner: </span>{x.owner_whatsapp}
+                              </div>
+                            )}
                           </div>
                           <a
                             href={`/listings/${x.id}`}
@@ -533,8 +653,10 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
               </div>
             )}
           </div>
+        </div>
 
-          {/* Inbox */}
+        <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Available Soon */}
           <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5
           shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
             <div>
@@ -549,8 +671,6 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
             ) : (
               <div className="mt-4 space-y-3">
                 {availableSoonWithin30.slice(0, 10).map((x) => {
-                  const availDate = parseDateAny(x.available_from ?? null);
-                  const days = availDate ? daysBetween(parseDateAny(todayISO)!, availDate) : null;
                   return (
                     <div key={x.id} className="rounded-xl bg-zinc-950 p-4">
                       <div className="flex items-start justify-between gap-3">
@@ -558,19 +678,19 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
                           <div className="text-sm font-semibold line-clamp-1">{x.condo_name}</div>
                           <div className="text-xs text-zinc-400 line-clamp-1">{x.area ?? "—"}</div>
 
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-200">
-                              {String(x.status)}
-                            </span>
-                            <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-200">
-                              {availDate ? toISODate(availDate) : "Unknown"}
-                            </span>
-                            {days !== null ? (
-                              <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-cyan-200">
-                                Available in {days} day{days === 1 ? "" : "s"}
-                              </span>
-                            ) : null}
+                          <div className="mt-2 text-xs text-cyan-100">
+                            Available: {availabilityLabel(x.available_from)}
                           </div>
+                          {listingRemark(x.raw_text) && (
+                            <div className="mt-2 whitespace-pre-line text-xs text-zinc-300">
+                              <span className="text-zinc-500">Remark: </span>{listingRemark(x.raw_text)}
+                            </div>
+                          )}
+                          {x.owner_whatsapp && (
+                            <div className="mt-1 text-xs text-zinc-300">
+                              <span className="text-zinc-500">Owner: </span>{x.owner_whatsapp}
+                            </div>
+                          )}
                         </div>
 
                         <a
@@ -593,8 +713,6 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
                 )}
 
                 {availableSoonAfter30.slice(0, 10).map((x) => {
-                  const availDate = parseDateAny(x.available_from ?? null);
-                  const days = availDate ? daysBetween(parseDateAny(todayISO)!, availDate) : null;
                   return (
                     <div key={x.id} className="rounded-xl bg-zinc-950 p-4 opacity-80">
                       <div className="flex items-start justify-between gap-3">
@@ -602,19 +720,19 @@ active:scale-[0.96] hover:shadow-[0_0_25px_rgba(34,211,238,0.8)]"
                           <div className="text-sm font-semibold line-clamp-1">{x.condo_name}</div>
                           <div className="text-xs text-zinc-400 line-clamp-1">{x.area ?? "—"}</div>
 
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-200">
-                              {String(x.status)}
-                            </span>
-                            <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-200">
-                              {availDate ? toISODate(availDate) : "Unknown"}
-                            </span>
-                            {days !== null ? (
-                              <span className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-cyan-200">
-                                Available in {days} day{days === 1 ? "" : "s"}
-                              </span>
-                            ) : null}
+                          <div className="mt-2 text-xs text-cyan-100">
+                            Available: {availabilityLabel(x.available_from)}
                           </div>
+                          {listingRemark(x.raw_text) && (
+                            <div className="mt-2 whitespace-pre-line text-xs text-zinc-300">
+                              <span className="text-zinc-500">Remark: </span>{listingRemark(x.raw_text)}
+                            </div>
+                          )}
+                          {x.owner_whatsapp && (
+                            <div className="mt-1 text-xs text-zinc-300">
+                              <span className="text-zinc-500">Owner: </span>{x.owner_whatsapp}
+                            </div>
+                          )}
                         </div>
 
                         <a

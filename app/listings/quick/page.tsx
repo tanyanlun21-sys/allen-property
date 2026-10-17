@@ -2,17 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { localDateInputValue } from "@/lib/availability";
 
 type ListingType = "rent" | "sale";
-type ListingStatus =
-  | "New"
-  | "Available"
-  | "Follow-up"
-  | "Viewing"
-  | "Negotiating"
-  | "Booked"
-  | "Closed"
-  | "Inactive";
 
 function toNullableNumber(v: any): number | null {
   const t = String(v ?? "").replace(/,/g, "").trim();
@@ -32,16 +24,6 @@ function guessFurnish(raw: string): "Fully" | "Partial" | null {
   if (/(fully|full furnish|fully furnished|全配)/i.test(s)) return "Fully";
   if (/(partial|partly|semi|部分)/i.test(s)) return "Partial";
   return null;
-}
-
-function guessStatus(raw: string): ListingStatus {
-  const s = raw.toLowerCase();
-  // 你V1默认 New，但如果文字明显写 available 就给 Available
-  if (/\bavailable\b|可入住|现房/i.test(s)) return "Available";
-  if (/\bbooked\b|已订/i.test(s)) return "Booked";
-  if (/\bclosed\b|完成|成交/i.test(s)) return "Closed";
-  if (/\binactive\b|下架/i.test(s)) return "Inactive";
-  return "New";
 }
 
 function extractCondoName(raw: string) {
@@ -115,7 +97,6 @@ export default function QuickAddPage() {
     const condo_name = extractCondoName(raw);
     const area = extractArea(raw);
     const type = guessType(raw);
-    const status = guessStatus(raw);
     const furnish = guessFurnish(raw);
     const price = extractPrice(raw);
     const sqft = extractSqft(raw);
@@ -127,7 +108,6 @@ export default function QuickAddPage() {
       condo_name,
       area,
       type,
-      status,
       furnish,
       price,
       sqft,
@@ -157,10 +137,6 @@ export default function QuickAddPage() {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // ✅ status=Available 才保留 available_from，否则清空
-    const availableFrom =
-      preview.status === "Available" ? (preview.available_from ?? null) : null;
-
     const payload: any = {
       user_id: userId,
 
@@ -168,7 +144,7 @@ export default function QuickAddPage() {
       area: preview.area ? preview.area.trim() : null,
 
       type: preview.type,
-      status: "New", // ✅ Quick Add 强制 New（你要“自动进Inbox”）
+      status: "New",
       furnish: preview.furnish,
 
       price: preview.price,
@@ -177,7 +153,7 @@ export default function QuickAddPage() {
       bathrooms: preview.bathrooms,
       carparks: preview.carparks,
 
-      available_from: availableFrom,
+      available_from: preview.available_from ?? localDateInputValue(),
 
       // ✅ 工作队列字段
       inbox: true,

@@ -3,22 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { LISTING_FROM_OPTIONS, normalizeBedrooms } from "@/lib/listingOptions";
+import { localDateInputValue } from "@/lib/availability";
 
 type ListingType = "rent" | "sale";
 
-type ListingStatus =
-  | "New"
-  | "Available"
-  | "Follow-up"
-  | "Viewing"
-  | "Negotiating"
-  | "Booked"
-  | "Closed"
-  | "Inactive";
-
 type Form = {
   type: ListingType;
-  status: "Available" | "Follow-up";
   condo_name: string;
   area: string;
   sqft: string; // keep as string for input UX
@@ -42,11 +32,10 @@ function toNullableNumber(v: string): number | null {
 }
 
 export default function NewListingPage() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = useMemo(() => localDateInputValue(), []);
 
   const [form, setForm] = useState<Form>({
     type: "rent",
-    status: "Available",
     condo_name: "",
     area: "",
     sqft: "",
@@ -130,15 +119,12 @@ export default function NewListingPage() {
       return;
     }
 
-    // ✅ Available From 默认今天，创建时写入
-    const availableFrom = today;
-
     const nowIso = new Date().toISOString();
 
     const payload: any = {
       user_id: userId,
       type: form.type,
-      status: form.status,
+      status: "Available",
       condo_name: form.condo_name.trim(),
       area: form.area.trim() || null,
       sqft: toNullableNumber(form.sqft),
@@ -150,7 +136,7 @@ export default function NewListingPage() {
       owner_whatsapp: form.owner_whatsapp.trim() || null,
       source_phone: form.source_phone.trim() || null,
       raw_text: form.raw_text.trim() ? form.raw_text.trim() : null,
-      available_from: availableFrom,
+      available_from: form.available_from || null,
 
       // ✅ Step 2：创建时写入
       created_at: nowIso,
@@ -191,38 +177,34 @@ export default function NewListingPage() {
 
         <div className="mt-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-5 space-y-3
         shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
-          <div className="grid grid-cols-2 gap-3">
-            <select
-              className="rounded-lg bg-zinc-800 px-3 py-2"
-              value={form.type}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, type: e.target.value as ListingType }))
-              }
-            >
-              <option value="rent">Rent</option>
-              <option value="sale">Sale</option>
-            </select>
-            <select
-              className="rounded-lg bg-zinc-800 px-3 py-2"
-              value={form.status}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  status: e.target.value as "Available" | "Follow-up",
-                }))
-              }
-            >
-              <option value="Available">Available</option>
-              <option value="Follow-up">Follow-up</option>
-            </select>
-          </div>
-
-          <input
+          <select
             className="w-full rounded-lg bg-zinc-800 px-3 py-2"
-            placeholder="Condo name *"
-            value={form.condo_name}
-            onChange={(e) => setForm((f) => ({ ...f, condo_name: e.target.value }))}
-          />
+            value={form.type}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, type: e.target.value as ListingType }))
+            }
+          >
+            <option value="rent">Rent</option>
+            <option value="sale">Sale</option>
+          </select>
+
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              className="min-w-0 rounded-lg bg-zinc-800 px-3 py-2"
+              placeholder="Condo name *"
+              value={form.condo_name}
+              onChange={(e) => setForm((f) => ({ ...f, condo_name: e.target.value }))}
+            />
+            <div>
+              <label className="mb-1 block text-xs text-zinc-400">Available Date</label>
+              <input
+                type="date"
+                className="w-full min-w-0 rounded-lg bg-zinc-800 px-3 py-2"
+                value={form.available_from}
+                onChange={(e) => setForm((f) => ({ ...f, available_from: e.target.value }))}
+              />
+            </div>
+          </div>
 
           <div className="space-y-2">
             <select

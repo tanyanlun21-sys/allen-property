@@ -5,29 +5,20 @@ import { supabase } from "@/lib/supabase";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import { rm } from "@/lib/money";
 import { bedroomLabel, bedroomNumber } from "@/lib/listingOptions";
+import { availabilityLabel } from "@/lib/availability";
 
 type ListingType = "rent" | "sale";
-
-type ListingStatus =
-  | "New"
-  | "Available"
-  | "Follow-up"
-  | "Viewing"
-  | "Negotiating"
-  | "Booked"
-  | "Closed"
-  | "Inactive"
-  | "Pending";
 
 type Furnish = "Fully" | "Partial" | null;
 
 type WorkListing = {
   id: string;
   type: ListingType;
-  status: ListingStatus;
+  status: string;
 
   condo_name: string;
   area: string | null;
+  available_from: string | null;
   sqft: number | null;
   bedrooms: string | number | null;
   bathrooms: number | null;
@@ -36,11 +27,7 @@ type WorkListing = {
   furnish: Furnish;
 
   inbox: boolean;
-  last_update: string | null;
   next_follow_up: string | null;
-  priority: number | null;
-
-  aging_days: number;
 
   updated_at: string;
 
@@ -53,62 +40,13 @@ type WorkListing = {
 };
 
 type ViewTab = "inbox" | "active" | "all";
-type StatusFilter = "all" | ListingStatus;
+type StatusFilter = "all" | "Available" | "Inactive" | "Closed";
 
-const STATUS_OPTIONS: ListingStatus[] = [
-  "New",
-  "Available",
-  "Follow-up",
-  "Viewing",
-  "Negotiating",
-  "Booked",
-  "Closed",
-  "Inactive",
-  "Pending",
-];
-
-function statusPillClass(s: ListingStatus) {
-  switch (s) {
-    case "New":
-      return "bg-zinc-700 text-zinc-100";
-    case "Available":
-      return "bg-emerald-900/40 text-emerald-200";
-    case "Follow-up":
-      return "bg-amber-900/40 text-amber-200";
-    case "Viewing":
-      return "bg-sky-900/40 text-sky-200";
-    case "Negotiating":
-      return "bg-purple-900/40 text-purple-200";
-    case "Booked":
-      return "bg-blue-900/40 text-blue-200";
-    case "Closed":
-      return "bg-zinc-800 text-zinc-200";
-    case "Inactive":
-      return "bg-zinc-900 text-zinc-400";
-    case "Pending":
-      return "bg-orange-900/40 text-orange-200";
-    default:
-      return "bg-zinc-800 text-zinc-200";
-  }
-}
+const STATUS_OPTIONS: Exclude<StatusFilter, "all">[] = ["Available", "Inactive", "Closed"];
 
 function bedroomSummary(value: WorkListing["bedrooms"]) {
   const label = bedroomLabel(value);
   return label === "Studio" || label === "-" ? label : `${label}R`;
-}
-
-function formatDT(s: string | null | undefined) {
-  if (!s) return "—";
-  const d = new Date(s);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString();
-}
-
-function formatDateOnly(s: string | null | undefined) {
-  if (!s) return "—";
-  const d = new Date(s);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString();
 }
 
 function isDueTodayOrPast(s: string | null | undefined) {
@@ -119,6 +57,13 @@ function isDueTodayOrPast(s: string | null | undefined) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const b = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
   return b <= today;
+}
+
+function formatDateOnly(s: string | null | undefined) {
+  if (!s) return "—";
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString();
 }
 
 export default function ListingsPage() {
@@ -182,7 +127,7 @@ export default function ListingsPage() {
     const { data, error } = await supabase
       .from("listings")
       .select(
-        "id,type,status,condo_name,area,sqft,bedrooms,bathrooms,carparks,price,furnish,updated_at,inbox,last_update,next_follow_up,priority,raw_text,owner_whatsapp,source_phone"
+        "id,type,status,condo_name,area,available_from,sqft,bedrooms,bathrooms,carparks,price,furnish,updated_at,inbox,next_follow_up,raw_text,owner_whatsapp,source_phone"
       )
       .order("updated_at", { ascending: false });
 
@@ -221,7 +166,6 @@ export default function ListingsPage() {
 
     const enriched = rows.map((x) => ({
       ...x,
-      aging_days: Math.floor((new Date().getTime() - new Date(x.updated_at).getTime()) / (1000 * 60 * 60 * 24)),
       _photoUrls: (photoMap.get(x.id) ?? []).map(toUrl),
     }));
 
@@ -251,7 +195,6 @@ export default function ListingsPage() {
 
       const okType = typeTab === "all" ? true : x.type === typeTab;
       const okStatus = status === "all" ? true : x.status === status;
-
       const terms = search.trim().toLowerCase().split(/\s+/).filter(Boolean);
 
       const searchable = [
@@ -336,8 +279,11 @@ export default function ListingsPage() {
   const toggleAdvertised = async (id: string) => {
     setBusyId(id);
 
-    const item = items.find(x => x.id === id);
-    if (!item) return;
+    const item = items.find((x) => x.id === id);
+    if (!item) {
+      setBusyId(null);
+      return;
+    }
 
     const currentRemark = item.raw_text || "";
     const isAdvertised = currentRemark.includes("[ADVERTISED]");
@@ -353,7 +299,7 @@ export default function ListingsPage() {
     if (error) {
       console.error("Toggle advertised error:", error);
     } else {
-      setItems(prev => prev.map(x => x.id === id ? { ...x, raw_text: newRemark } : x));
+      setItems((prev) => prev.map((x) => x.id === id ? { ...x, raw_text: newRemark } : x));
     }
 
     setBusyId(null);
@@ -553,9 +499,9 @@ export default function ListingsPage() {
   };
 
   const renderCard = (x: WorkListing) => {
-    const due = x.next_follow_up ? isDueTodayOrPast(x.next_follow_up) : false;
-    const aging = x.aging_days ?? 0;
+    const remark = (x.raw_text || "").replace(/\[ADVERTISED\]/gi, "").trim();
     const isAdvertised = (x.raw_text || "").includes("[ADVERTISED]");
+    const due = x.next_follow_up ? isDueTodayOrPast(x.next_follow_up) : false;
 
     return (
       <div
@@ -592,32 +538,32 @@ export default function ListingsPage() {
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span
-              className={`rounded-md px-2 py-1 text-xs font-semibold
-              shadow-[0_0_12px_rgba(34,211,238,0.25)]
-              ${statusPillClass(x.status)}`}
+              className="rounded-md bg-emerald-900/40 px-2 py-1 text-xs font-semibold text-emerald-200"
             >
-              {x.type.toUpperCase()} • {x.status}
+              {x.type.toUpperCase()}{x.status.toLowerCase() === "available" ? " • Available" : ""}
             </span>
+          </div>
 
-            <span
-              className="rounded-md px-2 py-1 text-xs font-semibold
-              bg-white/5 text-cyan-200 border border-cyan-400/30
-              shadow-[0_0_10px_rgba(34,211,238,0.25)]"
-            >
-              P{x.priority ?? 2}
-            </span>
-
-            <span
-              className={`rounded-md px-2 py-1 text-xs font-semibold ${
-                aging >= 7
-                  ? "bg-red-900/40 text-red-200 border border-red-500/40 shadow-[0_0_12px_rgba(239,68,68,0.4)]"
-                  : "bg-zinc-900 text-zinc-200 border border-white/10"
-              }`}
-            >
-              Aging {aging}d
-            </span>
-
-            {x.next_follow_up ? (
+          <div className="mt-2 text-sm text-cyan-100">
+            Available: {availabilityLabel(x.available_from)}
+          </div>
+          {remark ? (
+            <div className="mt-2 whitespace-pre-line text-sm text-zinc-300">
+              <span className="text-zinc-400">Remark: </span>{remark}
+            </div>
+          ) : null}
+          {x.owner_whatsapp ? (
+            <div className="mt-1 text-sm text-zinc-300">
+              <span className="text-zinc-400">Owner: </span>{x.owner_whatsapp}
+            </div>
+          ) : null}
+          {x.source_phone ? (
+            <div className="mt-1 text-sm text-zinc-300">
+              <span className="text-zinc-400">Listing From: </span>{x.source_phone}
+            </div>
+          ) : null}
+          {x.next_follow_up ? (
+            <div className="mt-2">
               <span
                 className={`rounded-md px-2 py-1 text-xs font-semibold ${
                   due
@@ -627,19 +573,8 @@ export default function ListingsPage() {
               >
                 FU {formatDateOnly(x.next_follow_up)}
               </span>
-            ) : null}
-
-            {isAdvertised && (
-              <span className="rounded-md px-2 py-1 text-xs font-semibold bg-green-900/40 text-green-200 border border-green-400/40">
-                Advertised
-              </span>
-            )}
-          </div>
-
-          <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
-            <span>Last update: {formatDT(x.last_update)}</span>
-            <span>{new Date(x.updated_at).toLocaleString()}</span>
-          </div>
+            </div>
+          ) : null}
         </a>
 
         {x.inbox ? (
@@ -675,11 +610,7 @@ export default function ListingsPage() {
         ) : (
           <div className="mt-4">
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleAdvertised(x.id);
-              }}
+              onClick={() => toggleAdvertised(x.id)}
               disabled={busyId === x.id}
               className={`w-full rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-150 active:scale-[0.96] disabled:opacity-40 ${
                 isAdvertised
@@ -797,43 +728,33 @@ export default function ListingsPage() {
 
           <div className="relative">
             <button
-              onClick={() => setStatusOpen(v => !v)}
-              className="flex items-center gap-2 rounded-lg bg-white/5 border border-cyan-400/30 backdrop-blur px-3 py-2 text-sm text-cyan-200
-              shadow-[0_0_18px_rgba(34,211,238,0.25)]
-              hover:bg-white/10 transition"
+              type="button"
+              onClick={() => setStatusOpen((open) => !open)}
+              className="flex items-center gap-2 rounded-lg bg-white/5 border border-cyan-400/30 backdrop-blur px-3 py-2 text-sm text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.25)] hover:bg-white/10 transition"
             >
               <span>{status === "all" ? "All status" : status}</span>
               <span className="text-xs opacity-70">▾</span>
             </button>
 
             {statusOpen && (
-              <div className="absolute z-50 mt-2 min-w-[160px] rounded-xl bg-[#050B14] border border-cyan-400/30 backdrop-blur
-              shadow-[0_0_30px_rgba(34,211,238,0.35)] overflow-hidden">
-                <div
-                  onClick={() => {
-                    setStatus("all" as any);
-                    setStatusOpen(false);
-                  }}
-                  className="px-3 py-2 text-sm cursor-pointer hover:bg-cyan-400/20"
-                >
-                  All status
-                </div>
-
-                {STATUS_OPTIONS.map((s) => (
-                  <div
-                    key={s}
+              <div className="absolute z-50 mt-2 min-w-[160px] rounded-xl bg-[#050B14] border border-cyan-400/30 backdrop-blur shadow-[0_0_30px_rgba(34,211,238,0.35)] overflow-hidden">
+                {(["all", ...STATUS_OPTIONS] as const).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
                     onClick={() => {
-                      setStatus(s as any);
+                      setStatus(option);
                       setStatusOpen(false);
                     }}
-                    className="px-3 py-2 text-sm cursor-pointer hover:bg-cyan-400/20"
+                    className="block w-full px-3 py-2 text-left text-sm cursor-pointer hover:bg-cyan-400/20"
                   >
-                    {s}
-                  </div>
+                    {option === "all" ? "All status" : option}
+                  </button>
                 ))}
               </div>
             )}
           </div>
+
           <button
             onClick={load}
             className="rounded-lg bg-white/5 border border-white/10 backdrop-blur px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800
@@ -868,23 +789,23 @@ export default function ListingsPage() {
         ) : filtered.length === 0 ? (
           <div className="mt-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-6 text-sm text-zinc-300
           shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]">
-            No listings here. Try switch view/status filters, or click{" "}
+            No listings here. Try another search or view, or click{" "}
             <span className="font-semibold text-white">+ New</span>.
           </div>
         ) : (
           <div className="mt-6 space-y-6">
             {(() => {
-              const followUps = filtered.filter(x => x.status === "Follow-up");
+              const followUps = filtered.filter((x) => x.status === "Follow-up");
               if (followUps.length === 0) return null;
               return (
                 <div className="space-y-4">
                   <div className="mb-4 flex flex-wrap items-center gap-2">
                     <div
-                    className="mb-4 inline-flex items-center rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-lg font-semibold backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.24)]"
-                    style={{ color: '#22D3EE', textShadow: '0 0 14px rgba(34,211,238,0.8)' }}
-                  >
-                    Follow-up ({followUps.length})
-                  </div>
+                      className="mb-4 inline-flex items-center rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-lg font-semibold backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.24)]"
+                      style={{ color: "#22D3EE", textShadow: "0 0 14px rgba(34,211,238,0.8)" }}
+                    >
+                      Follow-up ({followUps.length})
+                    </div>
                     <button
                       type="button"
                       onClick={() => rentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}

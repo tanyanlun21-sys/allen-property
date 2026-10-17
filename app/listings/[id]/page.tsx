@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { rm } from "@/lib/money";
 import { LISTING_FROM_OPTIONS, normalizeBedrooms } from "@/lib/listingOptions";
+import { availabilityLabel } from "@/lib/availability";
 
 type Deal = {
   gross: number;
@@ -26,31 +27,6 @@ function safeNum(v: any) {
 function clampPercent(v: any) {
   const n = safeNum(v);
   return Math.max(0, Math.min(100, n));
-}
-
-/**
- * �?Smart availability label
- * - if no date OR date <= today => "Ready move in"
- * - else => "Available early/mid/end Feb"
- */
-function availabilityLabel(availableFrom: any) {
-  if (!availableFrom) return "Ready move in";
-
-  const [y, m, d] = String(availableFrom).split("-").map(Number);
-  if (!y || !m || !d) return "Ready move in";
-
-  const from = new Date(y, m - 1, d, 0, 0, 0, 0);
-
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-
-  if (from.getTime() <= today.getTime()) return "Ready move in";
-
-  const day = from.getDate();
-  const bucket = day <= 10 ? "early" : day <= 20 ? "mid" : "end";
-  const mon = from.toLocaleString("en-US", { month: "short" });
-
-  return `Available ${bucket} ${mon}`;
 }
 
 function isStudioBedrooms(value: any) {
@@ -913,14 +889,12 @@ export default function ListingDetailPage() {
               <div>
                 <div className="text-xs text-zinc-400 mb-1">Status</div>
                 {editingInfo ? (
-                  <select className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none" value={infoDraft?.status ?? "available"} onChange={(e) => setInfoDraft((d: any) => ({ ...d, status: e.target.value }))}>
-                    <option value="New">New</option>
+                  <select
+                    className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm outline-none"
+                    value={infoDraft?.status ?? "Available"}
+                    onChange={(e) => setInfoDraft({ ...infoDraft, status: e.target.value })}
+                  >
                     <option value="Available">Available</option>
-                    <option value="Follow-up">Follow-up</option>
-                    <option value="Viewing">Viewing</option>
-                    <option value="Negotiating">Negotiating</option>
-                    <option value="Booked">Booked</option>
-                    <option value="Closed">Closed</option>
                     <option value="Inactive">Inactive</option>
                   </select>
                 ) : (
