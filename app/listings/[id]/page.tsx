@@ -896,6 +896,7 @@ export default function ListingDetailPage() {
                   >
                     <option value="Available">Available</option>
                     <option value="Inactive">Inactive</option>
+                    <option value="Closed">Closed</option>
                   </select>
                 ) : (
                   <div>{item.status}</div>
