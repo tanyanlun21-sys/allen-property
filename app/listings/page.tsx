@@ -537,11 +537,6 @@ export default function ListingsPage() {
           <div className="mt-2 text-sm text-cyan-100">
             Available: {availabilityLabel(x.available_from)}
           </div>
-          {remark ? (
-            <div className="mt-2 whitespace-pre-line text-sm text-zinc-300">
-              <span className="text-zinc-400">Remark: </span>{remark}
-            </div>
-          ) : null}
           {x.owner_whatsapp ? (
             <div className="mt-1 text-sm text-zinc-300">
               <span className="text-zinc-400">Owner: </span>{x.owner_whatsapp}
@@ -550,6 +545,12 @@ export default function ListingsPage() {
           {x.source_phone ? (
             <div className="mt-1 text-sm text-zinc-300">
               <span className="text-zinc-400">Listing From: </span>{x.source_phone}
+            </div>
+          ) : null}
+          {remark ? (
+            <div className="mt-2 whitespace-pre-line text-sm text-zinc-300">
+              <div className="text-zinc-400">Remark:</div>
+              {remark}
             </div>
           ) : null}
           {x.next_follow_up ? (
