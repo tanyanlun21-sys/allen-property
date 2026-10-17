@@ -496,11 +496,11 @@ export default function ListingsPage() {
     return (
       <div
         key={x.id}
-        className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-4
+        className="flex h-full flex-col rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-4
         hover:bg-white/10 transition
         shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_12px_40px_rgba(0,0,0,0.55)]"
       >
-        <a href={`/listings/${x.id}`} className="block">
+        <a href={`/listings/${x.id}`} className="flex flex-1 flex-col">
           <PhotoCarousel urls={(x as any)._photoUrls ?? []} />
 
           <div className="mt-3 text-lg font-semibold line-clamp-1">{x.condo_name}</div>
@@ -568,7 +568,7 @@ export default function ListingsPage() {
         </a>
 
         {x.inbox ? (
-          <div className="mt-4 flex gap-2">
+          <div className="mt-auto flex gap-2 pt-4">
             <button
               onClick={(e) => {
                 e.preventDefault();
@@ -598,7 +598,7 @@ export default function ListingsPage() {
             </a>
           </div>
         ) : (
-          <div className="mt-4">
+          <div className="mt-auto pt-4">
             <button
               onClick={() => toggleAdvertised(x.id)}
               disabled={busyId === x.id}
